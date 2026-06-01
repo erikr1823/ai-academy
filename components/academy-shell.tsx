@@ -10,13 +10,16 @@ export type NavKey =
   | "dashboard"
   | "choose-track"
   | "onboarding"
+  | "demo"
   | "essentials"
   | "builder"
   | "courses"
+  | "assignments"
   | "projects"
   | "mentor"
   | "workplace-simulator"
   | "certificates"
+  | "roadmap"
   | "admin"
   | "settings";
 
@@ -28,7 +31,9 @@ export const academyNavLinks: {
   { label: "Dashboard", href: "/dashboard", key: "dashboard" },
   { label: "Choose Track", href: "/choose-track", key: "choose-track" },
   { label: "Onboarding", href: "/onboarding", key: "onboarding" },
+  { label: "Demo", href: "/demo", key: "demo" },
   { label: "Courses", href: "/courses", key: "courses" },
+  { label: "Assignments", href: "/assignments", key: "assignments" },
   { label: "Projects", href: "/projects", key: "projects" },
   { label: "AI Mentor", href: "/mentor", key: "mentor" },
   {
@@ -37,6 +42,7 @@ export const academyNavLinks: {
     key: "workplace-simulator",
   },
   { label: "Certificates", href: "/certificates", key: "certificates" },
+  { label: "Roadmap", href: "/roadmap", key: "roadmap" },
   { label: "Admin", href: "/admin", key: "admin" },
 ];
 
@@ -273,11 +279,17 @@ export function ProgressBar({ value }: { value: number }) {
 
 export function StatusBadge({ status }: { status: string }) {
   const styles =
-    status === "Complete" || status === "Completed" || status === "Earned"
+    status === "Complete" ||
+    status === "Completed" ||
+    status === "Earned"
       ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
       : status === "Review" || status === "In Review"
         ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
-        : "border-zinc-700 bg-zinc-900 text-zinc-300";
+        : status === "In Progress"
+          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+          : status === "Not Started"
+            ? "border-zinc-800 bg-zinc-950 text-zinc-500"
+            : "border-zinc-700 bg-zinc-900 text-zinc-300";
 
   return (
     <span

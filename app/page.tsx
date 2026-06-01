@@ -5,6 +5,24 @@ const navLinks = [
   { label: "Pricing", href: "#pricing" },
 ];
 
+const audienceCards = [
+  {
+    title: "Professionals 45+",
+    description:
+      "Learn AI basics for emails, meetings, reports, and everyday work.",
+  },
+  {
+    title: "Builders & Tech Learners",
+    description:
+      "Build AI tools, automations, apps, and real-world projects.",
+  },
+  {
+    title: "Businesses",
+    description:
+      "Train employees with workplace-specific AI lessons and admin progress tracking.",
+  },
+];
+
 const features = [
   {
     title: "AI Mentor",
@@ -102,6 +120,24 @@ function Header() {
   );
 }
 
+function AudienceCard({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <article className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 text-left transition-all duration-300 hover:border-emerald-500/30 sm:p-8">
+      <div className="mb-4 h-1 w-8 rounded-full bg-emerald-500" />
+      <h3 className="text-lg font-semibold text-white sm:text-xl">{title}</h3>
+      <p className="mt-3 text-sm leading-relaxed text-zinc-400 sm:text-base">
+        {description}
+      </p>
+    </article>
+  );
+}
+
 function PathCard({
   badge,
   title,
@@ -148,19 +184,23 @@ export default function Home() {
 
       <section className="relative px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-20 lg:px-8">
         <div className="mx-auto max-w-6xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
-            Learn.{" "}
+          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            Learn AI Without Feeling{" "}
             <span className="bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-300 bg-clip-text text-transparent">
-              Build.
-            </span>{" "}
-            Deploy.
+              Overwhelmed
+            </span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-zinc-400 sm:text-xl">
-            Two learning paths designed for different goals. Choose Essentials
-            for workplace AI fluency, or Builder Academy to ship products and
-            automations.
+            Two paths. One platform. Practical AI training for professionals,
+            builders, and businesses.
           </p>
+
+          <div className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {audienceCards.map((card) => (
+              <AudienceCard key={card.title} {...card} />
+            ))}
+          </div>
 
           <div className="mx-auto mt-14 grid max-w-5xl gap-6 lg:grid-cols-2 lg:gap-8">
             <PathCard
@@ -212,6 +252,37 @@ export default function Home() {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="relative border-t border-zinc-900 px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 to-zinc-950 p-8 sm:p-12">
+            <p className="text-sm font-medium uppercase tracking-wider text-emerald-400">
+              For Teams
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              AI Training for Teams
+            </h2>
+            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-zinc-400">
+              Give your employees practical AI training based on the tools and
+              workflows they already use.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link
+                href="/demo"
+                className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-6 py-3.5 text-sm font-semibold text-black transition-all duration-200 hover:bg-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
+              >
+                View Demo
+              </Link>
+              <Link
+                href="/roadmap"
+                className="inline-flex items-center justify-center rounded-lg border border-zinc-700 px-6 py-3.5 text-sm font-medium text-zinc-300 transition-all duration-200 hover:border-emerald-500/50 hover:text-emerald-400"
+              >
+                See Roadmap
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -297,7 +368,7 @@ export default function Home() {
             data.
           </p>
           <Link
-            href="/choose-track"
+            href="/demo"
             className="mt-8 inline-flex items-center justify-center rounded-lg bg-emerald-500 px-6 py-3.5 text-sm font-semibold text-black transition-all duration-200 hover:bg-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
           >
             Start Demo Tour →
