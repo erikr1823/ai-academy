@@ -15,6 +15,7 @@ export type NavKey =
   | "builder"
   | "courses"
   | "assignments"
+  | "submissions"
   | "projects"
   | "mentor"
   | "workplace-simulator"
@@ -34,6 +35,7 @@ export const academyNavLinks: {
   { label: "Demo", href: "/demo", key: "demo" },
   { label: "Courses", href: "/courses", key: "courses" },
   { label: "Assignments", href: "/assignments", key: "assignments" },
+  { label: "Submissions", href: "/submissions", key: "submissions" },
   { label: "Projects", href: "/projects", key: "projects" },
   { label: "AI Mentor", href: "/mentor", key: "mentor" },
   {
@@ -285,7 +287,13 @@ export function StatusBadge({ status }: { status: string }) {
       ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
       : status === "Review" || status === "In Review"
         ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
-        : status === "In Progress"
+        : status === "Submitted"
+          ? "border-zinc-700 bg-zinc-900 text-zinc-300"
+          : status === "Approved"
+            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+            : status === "Needs Revision"
+              ? "border-red-500/30 bg-red-500/10 text-red-400"
+              : status === "In Progress"
           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
           : status === "Not Started"
             ? "border-zinc-800 bg-zinc-950 text-zinc-500"

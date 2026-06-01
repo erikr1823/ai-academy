@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AssignmentCard } from "@/components/assignment-card";
 import {
   AcademyShell,
-  btnPrimaryClass,
-  cardInteractiveClass,
+  btnSecondaryClass,
+  linkAccentClass,
   PageHeader,
   PageMain,
-  StatusBadge,
-  TrackBadge,
+  SectionHeader,
 } from "@/components/academy-shell";
-import { assignmentSummaries } from "@/lib/assignments";
+import {
+  assignmentListSections,
+  getAssignmentsBySection,
+} from "@/lib/assignments";
 
 export const metadata: Metadata = {
-  title: "Assignments — AI Academy",
+  title: "Assignment Center — AI Academy",
   description: "Complete weekly missions and submit proof of work.",
 };
 
@@ -20,48 +23,57 @@ export default function AssignmentsPage() {
   return (
     <AcademyShell activeKey="assignments" pageLabel="Assignments">
       <PageMain>
-        <PageHeader
-          label="Assignments"
-          title="Assignments"
-          description="Complete weekly missions and submit proof of work."
-        />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <PageHeader
+            label="Assignment Center"
+            title="Assignments"
+            description="Complete weekly missions and submit proof of work."
+          />
+          <Link
+            href="/submissions"
+            className={`shrink-0 self-start ${btnSecondaryClass}`}
+          >
+            View Submissions →
+          </Link>
+        </div>
 
-        <section className="mt-10 grid gap-6 md:grid-cols-2">
-          {assignmentSummaries.map((assignment) => (
-            <article
-              key={assignment.id}
-              className={`${cardInteractiveClass} flex flex-col p-6`}
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <TrackBadge label={assignment.track} />
-                <StatusBadge status={assignment.status} />
-              </div>
+        <div className="mt-10 space-y-12">
+          {assignmentListSections.map((section) => {
+            const assignments = getAssignmentsBySection(section.key);
 
-              <h2 className="mt-4 text-xl font-semibold text-white">
-                {assignment.title}
-              </h2>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">
-                {assignment.description}
-              </p>
+            return (
+              <section key={section.key}>
+                <SectionHeader title={section.title} />
+                <p className="-mt-2 mb-6 text-sm text-zinc-500">
+                  {section.description}
+                </p>
 
-              <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-zinc-800 pt-5 text-sm">
-                {assignment.dueDate && (
-                  <span className="text-zinc-500">{assignment.dueDate}</span>
+                {assignments.length > 0 ? (
+                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    {assignments.map((assignment) => (
+                      <AssignmentCard
+                        key={assignment.id}
+                        assignment={assignment}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/50 px-6 py-10 text-center text-sm text-zinc-500">
+                    No assignments in this section yet.
+                  </p>
                 )}
-                <span className="font-semibold text-emerald-400">
-                  +{assignment.xp} XP
-                </span>
-              </div>
+              </section>
+            );
+          })}
+        </div>
 
-              <Link
-                href={`/assignments/${assignment.id}`}
-                className={`mt-5 w-full ${btnPrimaryClass}`}
-              >
-                View Assignment
-              </Link>
-            </article>
-          ))}
-        </section>
+        <p className="mt-10 text-center text-sm text-zinc-500">
+          Track submission status and earned badges on the{" "}
+          <Link href="/submissions" className={linkAccentClass}>
+            Submissions page
+          </Link>
+          .
+        </p>
       </PageMain>
     </AcademyShell>
   );
