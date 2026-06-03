@@ -200,7 +200,7 @@ export function OnboardingFlow() {
                 What is your main goal?
               </h2>
               <p className="mt-2 text-sm text-zinc-400">
-                We'll use this to personalize your starting point.
+                We&apos;ll use this to personalize your starting point.
               </p>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 {stepThreeOptions.map((option) => (
