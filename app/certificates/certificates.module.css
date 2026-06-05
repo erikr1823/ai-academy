@@ -75,6 +75,40 @@
   color: #fff;
 }
 
+.empty {
+  border-radius: 1rem;
+  border: 1px dashed #3f3f46;
+  background: rgba(9, 9, 11, 0.5);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #71717a;
+  font-size: 0.875rem;
+}
+
+.certCardLocked {
+  opacity: 0.85;
+}
+
+.certCode {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  color: #34d399;
+}
+
+.certLink {
+  margin-top: 1rem;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #34d399;
+  text-decoration: none;
+}
+
+.certLink:hover {
+  color: #6ee7b7;
+}
+
 .certMeta {
   margin-top: 1rem;
   font-size: 0.875rem;

@@ -1,184 +1,194 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   PortalProgressBar,
   PortalShell,
   portalStyles,
 } from "@/components/portal-shell";
-import {
-  badges,
-  certificates,
-  profileStats,
-  rankLadder,
-  type CertificateStatus,
-} from "@/lib/certificates";
+import { getStudentCertificateOverview } from "@/lib/certificates-db";
+import { getAuthenticatedStudentId } from "@/lib/student-auth";
 import styles from "./certificates.module.css";
 
 export const metadata: Metadata = {
-  title: "Certificates & Achievements — AI Academy",
-  description: "Track your XP, badges, certificates, and rank.",
+  title: "Certificates — AI Academy",
+  description: "View earned and in-progress course certificates.",
 };
 
-function certBadgeClass(status: CertificateStatus) {
+export const dynamic = "force-dynamic";
+
+function formatDate(value: Date): string {
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function statusBadgeClass(status: string) {
   switch (status) {
-    case "Earned":
+    case "earned":
       return portalStyles.badgeComplete;
-    case "In Progress":
+    case "in_progress":
       return portalStyles.badgeInProgress;
     default:
       return portalStyles.badgeLocked;
   }
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className={styles.statCard}>
-      <p className={styles.statLabel}>{label}</p>
-      <p className={styles.statValue}>{value}</p>
-    </div>
-  );
+function statusLabel(status: string) {
+  switch (status) {
+    case "earned":
+      return "Earned";
+    case "in_progress":
+      return "In Progress";
+    default:
+      return "Locked";
+  }
 }
 
-function BadgeCard({
-  icon,
-  name,
-  description,
-  earned,
-}: {
-  icon: string;
-  name: string;
-  description: string;
-  earned: boolean;
-}) {
-  return (
-    <article
-      className={`${styles.badgeCard} ${earned ? "" : styles.badgeCardLocked}`}
-    >
-      <div className={styles.badgeRow}>
-        <div
-          className={`${styles.badgeIcon} ${
-            earned ? styles.badgeIconEarned : styles.badgeIconLocked
-          }`}
-        >
-          {earned ? icon : "?"}
-        </div>
-        <div className={styles.badgeInfo}>
-          <div className={styles.badgeTop}>
-            <h3 className={styles.badgeName}>{name}</h3>
-            <span
-              className={`${styles.badgeStatus} ${
-                earned ? styles.badgeStatusEarned : ""
-              }`}
-            >
-              {earned ? "Earned" : "Locked"}
-            </span>
-          </div>
-          <p className={styles.badgeDesc}>{description}</p>
-        </div>
-      </div>
-    </article>
-  );
-}
+export default async function CertificatesPage() {
+  const studentId = await getAuthenticatedStudentId();
+  const overview = studentId
+    ? await getStudentCertificateOverview(studentId)
+    : { earned: [], courses: [], earned_count: 0 };
 
-export default function CertificatesPage() {
+  const earnedCourses = overview.courses.filter((c) => c.status === "earned");
+  const lockedOrProgress = overview.courses.filter(
+    (c) => c.status !== "earned",
+  );
+
   return (
-    <PortalShell activeKey="certificates" pageLabel="Certificates" demoStep={9}>
+    <PortalShell activeKey="certificates" pageLabel="Certificates">
       <header className={portalStyles.pageHeader}>
-        <p className={portalStyles.pageEyebrow}>Achievements</p>
-        <h1 className={portalStyles.pageTitle}>Certificates & Achievements</h1>
+        <p className={portalStyles.pageEyebrow}>Completion Awards</p>
+        <h1 className={portalStyles.pageTitle}>Certificates</h1>
         <p className={portalStyles.pageDesc}>
-          Track your progress, badges, and completed programs.
+          Earn a certificate when you complete 100% of lessons in a course.
         </p>
       </header>
 
       <section className={styles.statsGrid}>
-        <StatCard
-          label="Total XP"
-          value={profileStats.totalXp.toLocaleString()}
-        />
-        <StatCard label="Badges Earned" value={profileStats.badgesEarned} />
-        <StatCard label="Certificates" value={profileStats.certificates} />
-        <StatCard label="Current Rank" value={profileStats.currentRank} />
-      </section>
-
-      <section className={portalStyles.section}>
-        <div className={portalStyles.sectionHeader}>
-          <h2 className={portalStyles.sectionTitle}>Certificates</h2>
+        <div className={styles.statCard}>
+          <p className={styles.statLabel}>Earned</p>
+          <p className={styles.statValue}>{overview.earned_count}</p>
         </div>
-        <div className={styles.certGrid}>
-          {certificates.map((cert) => (
-            <article key={cert.id} className={styles.certCard}>
-              <span
-                className={`${portalStyles.badge} ${certBadgeClass(cert.status)}`}
-              >
-                {cert.status}
-              </span>
-              <h3 className={styles.certName}>{cert.name}</h3>
-              <div className={portalStyles.progressMeta}>
-                <span className={portalStyles.progressLabel}>Progress</span>
-                <span className={portalStyles.progressValue}>
-                  {cert.progress}%
-                </span>
-              </div>
-              <PortalProgressBar value={cert.progress} />
-              {cert.date && (
-                <p className={styles.certMeta}>Earned: {cert.date}</p>
-              )}
-              {cert.expected && (
-                <p className={styles.certMeta}>Expected: {cert.expected}</p>
-              )}
-              {cert.status === "Locked" && (
-                <p className={styles.certLocked}>
-                  Complete prerequisite tracks to unlock.
-                </p>
-              )}
-            </article>
-          ))}
+        <div className={styles.statCard}>
+          <p className={styles.statLabel}>Courses</p>
+          <p className={styles.statValue}>{overview.courses.length}</p>
         </div>
-      </section>
-
-      <section className={portalStyles.section}>
-        <div className={portalStyles.sectionHeader}>
-          <h2 className={portalStyles.sectionTitle}>Rank Ladder</h2>
+        <div className={styles.statCard}>
+          <p className={styles.statLabel}>In Progress</p>
+          <p className={styles.statValue}>
+            {
+              overview.courses.filter((c) => c.status === "in_progress")
+                .length
+            }
+          </p>
         </div>
-        <div className={styles.rankCard}>
-          <div className={styles.rankRow}>
-            {rankLadder.map((rank, index) => {
-              const isCurrent = rank === profileStats.currentRank;
-              return (
-                <div key={rank} className={styles.rankItem}>
-                  <span
-                    className={`${styles.rankPill} ${
-                      isCurrent ? styles.rankPillActive : ""
-                    }`}
-                  >
-                    {rank}
-                    {isCurrent && (
-                      <span className={styles.rankYou}>You</span>
-                    )}
-                  </span>
-                  {index < rankLadder.length - 1 && (
-                    <span className={styles.rankArrow}>→</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <p className={styles.rankNote}>
-            Earn XP, complete certificates, and finish projects to climb the
-            ladder.
+        <div className={styles.statCard}>
+          <p className={styles.statLabel}>Locked</p>
+          <p className={styles.statValue}>
+            {overview.courses.filter((c) => c.status === "locked").length}
           </p>
         </div>
       </section>
 
       <section className={portalStyles.section}>
         <div className={portalStyles.sectionHeader}>
-          <h2 className={portalStyles.sectionTitle}>Badges</h2>
+          <h2 className={portalStyles.sectionTitle}>Earned Certificates</h2>
         </div>
-        <div className={styles.badgeGrid}>
-          {badges.map((badge) => (
-            <BadgeCard key={badge.id} {...badge} />
-          ))}
+        {earnedCourses.length === 0 ? (
+          <p className={styles.empty}>
+            Complete all lessons in a course to earn your first certificate.
+          </p>
+        ) : (
+          <div className={styles.certGrid}>
+            {earnedCourses.map((course) => (
+              <article key={course.course_id} className={styles.certCard}>
+                <span
+                  className={`${portalStyles.badge} ${portalStyles.badgeComplete}`}
+                >
+                  Earned
+                </span>
+                <h3 className={styles.certName}>{course.course_title}</h3>
+                <div className={portalStyles.progressMeta}>
+                  <span className={portalStyles.progressLabel}>Completion</span>
+                  <span className={portalStyles.progressValue}>100%</span>
+                </div>
+                <PortalProgressBar value={100} />
+                {course.certificate && (
+                  <>
+                    <p className={styles.certMeta}>
+                      Issued: {formatDate(course.certificate.issued_at)}
+                    </p>
+                    <p className={styles.certCode}>
+                      Code: {course.certificate.certificate_code}
+                    </p>
+                    <Link
+                      href={`/certificates/${course.certificate.id}`}
+                      className={styles.certLink}
+                    >
+                      View Certificate →
+                    </Link>
+                  </>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className={portalStyles.section}>
+        <div className={portalStyles.sectionHeader}>
+          <h2 className={portalStyles.sectionTitle}>
+            Locked & In Progress
+          </h2>
         </div>
+        {lockedOrProgress.length === 0 ? (
+          <p className={styles.empty}>All available certificates earned.</p>
+        ) : (
+          <div className={styles.certGrid}>
+            {lockedOrProgress.map((course) => (
+              <article
+                key={course.course_id}
+                className={`${styles.certCard} ${
+                  course.status === "locked" ? styles.certCardLocked : ""
+                }`}
+              >
+                <span
+                  className={`${portalStyles.badge} ${statusBadgeClass(course.status)}`}
+                >
+                  {statusLabel(course.status)}
+                </span>
+                <h3 className={styles.certName}>{course.course_title}</h3>
+                <div className={portalStyles.progressMeta}>
+                  <span className={portalStyles.progressLabel}>Completion</span>
+                  <span className={portalStyles.progressValue}>
+                    {course.progress_percent}%
+                  </span>
+                </div>
+                <PortalProgressBar value={course.progress_percent} />
+                <p className={styles.certMeta}>
+                  {course.completed_count} of {course.lesson_count} lessons
+                  complete
+                </p>
+                {course.status === "locked" && (
+                  <p className={styles.certLocked}>
+                    Start the course to unlock certificate progress.
+                  </p>
+                )}
+                {course.status === "in_progress" && (
+                  <Link
+                    href={`/courses/${course.course_id}`}
+                    className={styles.certLink}
+                  >
+                    Continue Course →
+                  </Link>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </PortalShell>
   );

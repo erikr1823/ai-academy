@@ -383,8 +383,8 @@ export async function markLessonComplete(
     return { success: false, error: "Student not found." };
   }
 
-  const lessonCheck = await query<{ id: string }>(
-    "SELECT id FROM lessons WHERE id = $1",
+  const lessonCheck = await query<{ id: string; course_id: string }>(
+    "SELECT id, course_id FROM lessons WHERE id = $1",
     [lessonId],
   );
   if (!lessonCheck.rows[0]) {
@@ -399,6 +399,14 @@ export async function markLessonComplete(
     DO UPDATE SET completed = true, completed_at = NOW()
     `,
     [userId, lessonId],
+  );
+
+  const { tryIssueCertificateOnCourseComplete } = await import(
+    "@/lib/certificates-db"
+  );
+  await tryIssueCertificateOnCourseComplete(
+    userId,
+    lessonCheck.rows[0].course_id,
   );
 
   return { success: true };
@@ -482,10 +490,8 @@ export async function getDashboardStats(
     .filter(Boolean)
     .join(" ");
 
-  const courses = await getCoursesWithProgress(activeUserId);
-  const certificates_earned = courses.filter(
-    (course) => course.progress_percent === 100,
-  ).length;
+  const { countStudentCertificates } = await import("@/lib/certificates-db");
+  const certificates_earned = await countStudentCertificates(activeUserId);
 
   return {
     courses_enrolled: Number(courseCountResult.rows[0]?.count ?? 0),

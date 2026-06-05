@@ -110,3 +110,20 @@ CREATE INDEX IF NOT EXISTS assignments_course_id_idx ON assignments (course_id);
 CREATE INDEX IF NOT EXISTS assignments_lesson_id_idx ON assignments (lesson_id);
 CREATE INDEX IF NOT EXISTS submissions_assignment_id_idx ON submissions (assignment_id);
 CREATE INDEX IF NOT EXISTS submissions_student_id_idx ON submissions (student_id);
+
+-- Certificates
+
+CREATE TABLE IF NOT EXISTS certificates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  certificate_code TEXT UNIQUE NOT NULL,
+  issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS certificates_student_course_unique_idx
+  ON certificates (student_id, course_id);
+CREATE INDEX IF NOT EXISTS certificates_student_id_idx ON certificates (student_id);
+CREATE INDEX IF NOT EXISTS certificates_course_id_idx ON certificates (course_id);
+CREATE INDEX IF NOT EXISTS certificates_code_idx ON certificates (certificate_code);
