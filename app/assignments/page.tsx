@@ -1,80 +1,97 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AssignmentCard } from "@/components/assignment-card";
-import {
-  AcademyShell,
-  btnSecondaryClass,
-  linkAccentClass,
-  PageHeader,
-  PageMain,
-  SectionHeader,
-} from "@/components/academy-shell";
-import {
-  assignmentListSections,
-  getAssignmentsBySection,
-} from "@/lib/assignments";
+import { PortalShell } from "@/components/portal-shell";
+import { listStudentAssignments } from "@/lib/assignments-db";
+import { getAuthenticatedStudentId } from "@/lib/student-auth";
+import styles from "./assignments.module.css";
 
 export const metadata: Metadata = {
-  title: "Assignment Center — AI Academy",
-  description: "Complete weekly missions and submit proof of work.",
+  title: "Assignments — AI Academy",
+  description: "View and submit course assignments.",
 };
 
-export default function AssignmentsPage() {
+export const dynamic = "force-dynamic";
+
+function formatDueDate(value: Date | null): string {
+  if (!value) return "No due date";
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function statusClass(status: string | null): string {
+  if (!status) return styles.statusPending;
+  if (status === "reviewed") return styles.statusReviewed;
+  return styles.statusSubmitted;
+}
+
+function statusLabel(status: string | null): string {
+  if (!status) return "Not submitted";
+  if (status === "reviewed") return "Reviewed";
+  return "Submitted";
+}
+
+export default async function AssignmentsPage() {
+  const studentId = await getAuthenticatedStudentId();
+  const assignments = studentId
+    ? await listStudentAssignments(studentId)
+    : [];
+
   return (
-    <AcademyShell activeKey="assignments" pageLabel="Assignments">
-      <PageMain>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <PageHeader
-            label="Assignment Center"
-            title="Assignments"
-            description="Complete weekly missions and submit proof of work."
-          />
-          <Link
-            href="/submissions"
-            className={`shrink-0 self-start ${btnSecondaryClass}`}
-          >
-            View Submissions →
-          </Link>
-        </div>
-
-        <div className="mt-10 space-y-12">
-          {assignmentListSections.map((section) => {
-            const assignments = getAssignmentsBySection(section.key);
-
-            return (
-              <section key={section.key}>
-                <SectionHeader title={section.title} />
-                <p className="-mt-2 mb-6 text-sm text-zinc-500">
-                  {section.description}
-                </p>
-
-                {assignments.length > 0 ? (
-                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                    {assignments.map((assignment) => (
-                      <AssignmentCard
-                        key={assignment.id}
-                        assignment={assignment}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/50 px-6 py-10 text-center text-sm text-zinc-500">
-                    No assignments in this section yet.
-                  </p>
-                )}
-              </section>
-            );
-          })}
-        </div>
-
-        <p className="mt-10 text-center text-sm text-zinc-500">
-          Track submission status and earned badges on the{" "}
-          <Link href="/submissions" className={linkAccentClass}>
-            Submissions page
-          </Link>
-          .
+    <PortalShell activeKey="assignments" pageLabel="Assignments">
+      <header className={styles.pageHeader}>
+        <p className={styles.pageEyebrow}>Assignment Center</p>
+        <h1 className={styles.pageTitle}>Assignments</h1>
+        <p className={styles.pageDesc}>
+          Complete assignments for your courses and submit your work for review.
         </p>
-      </PageMain>
-    </AcademyShell>
+      </header>
+
+      {assignments.length === 0 ? (
+        <p className={styles.empty}>No assignments available yet.</p>
+      ) : (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Course</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assignments.map((assignment) => (
+                <tr key={assignment.id}>
+                  <td>{assignment.title}</td>
+                  <td>{assignment.course_title}</td>
+                  <td>{formatDueDate(assignment.due_date)}</td>
+                  <td>
+                    <span
+                      className={`${styles.statusBadge} ${statusClass(assignment.submission_status)}`}
+                    >
+                      {statusLabel(assignment.submission_status)}
+                    </span>
+                  </td>
+                  <td>
+                    <Link
+                      href={`/assignments/${assignment.id}`}
+                      className={styles.btnPrimary}
+                    >
+                      {assignment.submission_status ? "View" : "Submit"}
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </PortalShell>
   );
 }

@@ -1,16 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/login(.*)",
-  "/signup(.*)",
-  "/api/signup(.*)",
-  "/api/test-db(.*)",
-]);
-
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/courses(.*)",
+  "/assignments(.*)",
   "/profile(.*)",
   "/certificates(.*)",
   "/roadmap(.*)",
@@ -18,17 +11,26 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  if (isPublicRoute(request)) return;
-  if (isProtectedRoute(request)) {
-    await auth.protect({
-      unauthenticatedUrl: new URL("/login", request.url).toString(),
-    });
+  if (!isProtectedRoute(request)) {
+    return;
   }
+
+  await auth.protect({
+    unauthenticatedUrl: new URL("/login", request.url).toString(),
+  });
 });
 
 export const config = {
+  // Only run Clerk on protected routes (+ Clerk internals).
+  // Do NOT use a catch-all matcher — that runs handshake on public pages like /.
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
+    "/dashboard(.*)",
+    "/courses(.*)",
+    "/assignments(.*)",
+    "/profile(.*)",
+    "/certificates(.*)",
+    "/roadmap(.*)",
+    "/admin(.*)",
+    "/__clerk(.*)",
   ],
 };

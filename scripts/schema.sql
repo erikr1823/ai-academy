@@ -80,3 +80,33 @@ ALTER TABLE courses ADD COLUMN IF NOT EXISTS slug TEXT;
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS track TEXT;
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS content JSONB DEFAULT '[]'::jsonb;
 CREATE UNIQUE INDEX IF NOT EXISTS courses_slug_unique_idx ON courses (slug) WHERE slug IS NOT NULL;
+
+-- Assignments and submissions
+
+CREATE TABLE IF NOT EXISTS assignments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  lesson_id UUID REFERENCES lessons(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  instructions TEXT,
+  due_date TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  response TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'submitted',
+  feedback TEXT,
+  grade TEXT,
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  UNIQUE (assignment_id, student_id)
+);
+
+CREATE INDEX IF NOT EXISTS assignments_course_id_idx ON assignments (course_id);
+CREATE INDEX IF NOT EXISTS assignments_lesson_id_idx ON assignments (lesson_id);
+CREATE INDEX IF NOT EXISTS submissions_assignment_id_idx ON submissions (assignment_id);
+CREATE INDEX IF NOT EXISTS submissions_student_id_idx ON submissions (student_id);

@@ -16,9 +16,12 @@ export const metadata: Metadata = {
   description: "Browse AI Essentials and AI Builder Academy courses.",
 };
 
+export const dynamic = "force-dynamic";
+
 const navLinks = [
   { label: "Dashboard", href: "/dashboard", key: "dashboard" },
   { label: "Courses", href: "/courses", key: "courses" },
+  { label: "Assignments", href: "/assignments", key: "assignments" },
   { label: "Roadmap", href: "/roadmap", key: "roadmap" },
   { label: "Certificates", href: "/certificates", key: "certificates" },
   { label: "Profile", href: "/profile", key: "profile" },

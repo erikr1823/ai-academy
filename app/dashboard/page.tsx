@@ -20,9 +20,12 @@ export const metadata: Metadata = {
   description: "Your AI Academy learning dashboard.",
 };
 
+export const dynamic = "force-dynamic";
+
 const navLinks = [
   { label: "Dashboard", href: "/dashboard", key: "dashboard" },
   { label: "Courses", href: "/courses", key: "courses" },
+  { label: "Assignments", href: "/assignments", key: "assignments" },
   { label: "Roadmap", href: "/roadmap", key: "roadmap" },
   { label: "Certificates", href: "/certificates", key: "certificates" },
   { label: "Profile", href: "/profile", key: "profile" },

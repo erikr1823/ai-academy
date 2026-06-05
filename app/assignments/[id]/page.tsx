@@ -1,53 +1,121 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AssignmentDetailTabs } from "@/components/assignment-detail-tabs";
+import { AssignmentSubmitForm } from "@/components/assignment-submit-form";
+import { PortalShell } from "@/components/portal-shell";
 import {
-  AcademyShell,
-  linkAccentClass,
-  PageMain,
-} from "@/components/academy-shell";
-import { getAllAssignmentIds, getAssignmentById } from "@/lib/assignments";
+  getAssignmentForStudent,
+  isUuid,
+} from "@/lib/assignments-db";
+import { getAuthenticatedStudentId } from "@/lib/student-auth";
+import styles from "../assignments.module.css";
 
 type PageProps = {
   params: Promise<{ id: string }>;
 };
 
-export async function generateStaticParams() {
-  return getAllAssignmentIds().map((id) => ({ id }));
+function formatDueDate(value: Date | null): string {
+  if (!value) return "No due date";
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const assignment = getAssignmentById(id);
+  const studentId = await getAuthenticatedStudentId();
+  if (!studentId) return { title: "Assignment — AI Academy" };
 
-  if (!assignment) {
-    return { title: "Assignment Not Found — AI Academy" };
-  }
-
+  const data = await getAssignmentForStudent(id, studentId);
   return {
-    title: `${assignment.title} — AI Academy`,
-    description: assignment.missionBrief,
+    title: data
+      ? `${data.assignment.title} — AI Academy`
+      : "Assignment Not Found — AI Academy",
   };
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function AssignmentDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const assignment = getAssignmentById(id);
 
-  if (!assignment) notFound();
+  if (!isUuid(id)) notFound();
+
+  const studentId = await getAuthenticatedStudentId();
+  if (!studentId) notFound();
+
+  const data = await getAssignmentForStudent(id, studentId);
+  if (!data) notFound();
+
+  const { assignment, submission } = data;
 
   return (
-    <AcademyShell activeKey="assignments" pageLabel="Assignment">
-      <PageMain>
-        <Link href="/assignments" className={`inline-flex ${linkAccentClass}`}>
-          ← Back to Assignments
-        </Link>
+    <PortalShell activeKey="assignments" pageLabel="Assignment">
+      <Link href="/assignments" className={styles.linkAccent}>
+        ← Back to Assignments
+      </Link>
 
-        <div className="mt-6">
-          <AssignmentDetailTabs assignment={assignment} />
+      <div className={styles.detailCard}>
+        <p className={styles.pageEyebrow}>{assignment.course_title}</p>
+        <h1 className={styles.pageTitle}>{assignment.title}</h1>
+
+        <div className={styles.detailMeta}>
+          <span>
+            Due: <strong>{formatDueDate(assignment.due_date)}</strong>
+          </span>
+          {assignment.lesson_title && (
+            <span>
+              Lesson: <strong>{assignment.lesson_title}</strong>
+            </span>
+          )}
+          <span>
+            Status:{" "}
+            <strong>
+              {submission
+                ? submission.status === "reviewed"
+                  ? "Reviewed"
+                  : "Submitted"
+                : "Not submitted"}
+            </strong>
+          </span>
         </div>
-      </PageMain>
-    </AcademyShell>
+
+        {assignment.instructions && (
+          <div className={styles.instructions}>{assignment.instructions}</div>
+        )}
+
+        {submission ? (
+          <>
+            <div className={styles.submittedBox}>
+              <p className={styles.submittedTitle}>Your submission</p>
+              <p className={styles.submittedText}>{submission.response}</p>
+              <p
+                className={styles.submittedText}
+                style={{ marginTop: "0.5rem", color: "#71717a" }}
+              >
+                Submitted{" "}
+                {new Date(submission.submitted_at).toLocaleString("en-US")}
+              </p>
+            </div>
+            {(submission.feedback || submission.grade) && (
+              <div className={styles.feedbackBox}>
+                {submission.grade && (
+                  <p className={styles.label}>Grade: {submission.grade}</p>
+                )}
+                {submission.feedback && (
+                  <p className={styles.instructions}>{submission.feedback}</p>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <AssignmentSubmitForm assignmentId={assignment.id} />
+        )}
+      </div>
+    </PortalShell>
   );
 }
