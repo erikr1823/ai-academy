@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { LessonContentRenderer } from "@/components/lesson-content-renderer";
 import { MarkLessonComplete } from "@/components/mark-lesson-complete";
 import { PortalShell, portalStyles } from "@/components/portal-shell";
 import {
@@ -35,8 +36,7 @@ export default async function LessonPage({ params }: PageProps) {
     notFound();
   }
 
-  const userId = await getActiveUserId();
-  const lesson = await getLessonById(id, lessonId, userId);
+  const lesson = await getLessonById(id, lessonId, await getActiveUserId());
 
   if (!lesson) notFound();
 
@@ -81,18 +81,20 @@ export default async function LessonPage({ params }: PageProps) {
           </section>
 
           <section className={styles.aboutCard}>
-            <h2 className={styles.aboutTitle}>About this lesson</h2>
-            <p className={styles.aboutText}>{lesson.description}</p>
+            <h2 className={styles.aboutTitle}>Lesson content</h2>
+            <LessonContentRenderer
+              content={lesson.content ?? []}
+              fallback={lesson.description}
+            />
           </section>
         </div>
 
         <div className={styles.sideCol}>
-          <MarkLessonComplete
-            userId={userId}
-            lessonId={lesson.id}
-            courseId={id}
-            initialCompleted={lesson.completed}
-          />
+            <MarkLessonComplete
+              lessonId={lesson.id}
+              courseId={id}
+              initialCompleted={lesson.completed}
+            />
 
           <section className={styles.mentorCard}>
             <p className={styles.mentorLabel}>AI Mentor Help</p>

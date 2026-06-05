@@ -31,6 +31,58 @@
   color: #fff;
 }
 
+.cardValueSm {
+  margin-top: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+  word-break: break-word;
+}
+
+.cardValueWrap {
+  margin-top: 1rem;
+}
+
+.statsGrid {
+  margin-top: 2rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.statCard {
+  border-radius: 1rem;
+  border: 1px solid #27272a;
+  background-color: #09090b;
+  padding: 1.25rem;
+  transition: border-color 0.2s;
+}
+
+.statCard:hover {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.statValue {
+  margin-top: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+
 .cardMeta {
   margin-top: 0.5rem;
   font-size: 0.875rem;

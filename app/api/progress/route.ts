@@ -1,25 +1,42 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import {
   getCourseById,
   getDashboardStats,
+  getActiveUserId,
   markLessonComplete,
 } from "@/lib/courses-db";
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId: clerkUserId } = await auth();
+    if (!clerkUserId) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required." },
+        { status: 401 },
+      );
+    }
+
     const body = (await request.json()) as {
-      userId?: string;
       lessonId?: string;
     };
 
-    if (!body.userId || !body.lessonId) {
+    if (!body.lessonId) {
       return NextResponse.json(
-        { success: false, error: "userId and lessonId are required." },
+        { success: false, error: "lessonId is required." },
         { status: 400 },
       );
     }
 
-    const result = await markLessonComplete(body.userId, body.lessonId);
+    const studentId = await getActiveUserId();
+    if (!studentId) {
+      return NextResponse.json(
+        { success: false, error: "Student record not found." },
+        { status: 404 },
+      );
+    }
+
+    const result = await markLessonComplete(studentId, body.lessonId);
 
     if (!result.success) {
       return NextResponse.json(

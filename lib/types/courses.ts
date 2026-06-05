@@ -8,6 +8,8 @@ export type CourseRow = {
   created_at: Date;
 };
 
+import type { LessonContentBlock } from "@/lib/types/lesson-content";
+
 export type LessonRow = {
   id: string;
   course_id: string;
@@ -15,6 +17,7 @@ export type LessonRow = {
   description: string;
   video_url: string | null;
   lesson_order: number;
+  content?: LessonContentBlock[];
   created_at: Date;
 };
 
@@ -50,4 +53,9 @@ export type DashboardStats = {
   completion_percent: number;
   current_track: string | null;
   user_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  created_at: Date | null;
+  certificates_earned: number;
 };

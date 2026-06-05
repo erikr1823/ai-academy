@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import styles from "../login.module.css";
+import styles from "../../login.module.css";
+import { LoginForm } from "../login-form";
 
 export const metadata: Metadata = {
   title: "Login — AI Academy",
@@ -50,24 +51,11 @@ export default function LoginPage() {
             <p className={styles.eyebrow}>Login</p>
             <h1 className={styles.title}>Welcome back</h1>
             <p className={styles.subtitle}>
-              Authentication is coming in Phase 2. For now, explore the demo app
-              or complete signup.
+              Sign in to access your dashboard, courses, and learning progress.
             </p>
           </div>
 
-          <div className={styles.card}>
-            <p className={styles.cardNote}>
-              Email magic links and Clerk auth are not connected yet.
-            </p>
-            <div className={styles.btnStack}>
-              <Link href="/dashboard" className={styles.btnPrimaryLg}>
-                Enter Demo Dashboard
-              </Link>
-              <Link href="/signup" className={styles.btnSecondary}>
-                Create an Account
-              </Link>
-            </div>
-          </div>
+          <LoginForm />
 
           <Link href="/" className={styles.backLink}>
             <span>← Back to home</span>

@@ -636,3 +636,25 @@
   background-color: #10b981;
   transition: width 0.3s;
 }
+
+.signOutBtn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #3f3f46;
+  background: transparent;
+  color: #d4d4d8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.signOutBtn:hover {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}

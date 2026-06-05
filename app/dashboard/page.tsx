@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { PortalSignOut } from "@/components/portal-sign-out";
 import styles from "../dashboard.module.css";
 import {
   demoFlowSteps,
@@ -73,6 +74,7 @@ function PortalSidebar({ activeKey }: { activeKey: string }) {
           <Link href="/demo" className={styles.sidebarCardLink}>
             Tour the demo →
           </Link>
+          <PortalSignOut className={styles.signOutBtn} />
         </div>
       </div>
     </aside>
@@ -103,11 +105,21 @@ function MobileNav({ activeKey }: { activeKey: string }) {
                 {link.label}
               </Link>
             ))}
+            <PortalSignOut className={styles.signOutBtn} />
           </nav>
         </div>
       </div>
     </details>
   );
+}
+
+function formatJoinDate(date: Date | null): string {
+  if (!date) return "—";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(date));
 }
 
 function DemoFlowBar() {
@@ -226,7 +238,7 @@ export default async function DashboardPage() {
   const userId = await getActiveUserId();
   const stats = await getDashboardStats(userId);
   const recentCourses = await getRecentCourses(userId);
-  const welcomeName = stats.user_name?.split(" ")[0] ?? "Student";
+  const welcomeName = stats.first_name ?? stats.user_name?.split(" ")[0] ?? "Student";
 
   return (
     <div className={styles.page}>
@@ -270,6 +282,36 @@ export default async function DashboardPage() {
                 learning path.
               </p>
             </header>
+
+            <section className={styles.userInfoCard}>
+              <p className={styles.pageEyebrow}>Your Account</p>
+              <div className={styles.userInfoGrid}>
+                <div>
+                  <p className={styles.userInfoItemLabel}>First Name</p>
+                  <p className={styles.userInfoItemValue}>
+                    {stats.first_name ?? "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className={styles.userInfoItemLabel}>Email</p>
+                  <p className={styles.userInfoItemValue}>
+                    {stats.email ?? "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className={styles.userInfoItemLabel}>Member Since</p>
+                  <p className={styles.userInfoItemValue}>
+                    {formatJoinDate(stats.created_at)}
+                  </p>
+                </div>
+                <div>
+                  <p className={styles.userInfoItemLabel}>Lessons Completed</p>
+                  <p className={styles.userInfoItemValue}>
+                    {stats.lessons_completed}
+                  </p>
+                </div>
+              </div>
+            </section>
 
             <section className={styles.statsGrid}>
               <StatCard

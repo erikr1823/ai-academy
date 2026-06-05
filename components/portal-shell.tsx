@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { PortalSignOut } from "@/components/portal-sign-out";
 import styles from "./portal-shell.module.css";
 import {
   demoFlowSteps,
@@ -108,6 +109,7 @@ export function PortalShell({
               <Link href="/demo" className={styles.sidebarCardLink}>
                 Tour the demo →
               </Link>
+              <PortalSignOut className={styles.signOutBtn} />
             </div>
           </div>
         </aside>
@@ -143,6 +145,7 @@ export function PortalShell({
                             {link.label}
                           </Link>
                         ))}
+                        <PortalSignOut className={styles.signOutBtn} />
                       </nav>
                     </div>
                   </div>

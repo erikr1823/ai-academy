@@ -5,14 +5,12 @@ import { useState } from "react";
 import styles from "./mark-lesson-complete.module.css";
 
 type MarkLessonCompleteProps = {
-  userId: string | null;
   lessonId: string;
   courseId: string;
   initialCompleted: boolean;
 };
 
 export function MarkLessonComplete({
-  userId,
   lessonId,
   courseId,
   initialCompleted,
@@ -23,13 +21,6 @@ export function MarkLessonComplete({
   const [error, setError] = useState<string | null>(null);
 
   async function handleMarkComplete() {
-    if (!userId) {
-      setError(
-        "No student account found. Sign up first to save lesson progress.",
-      );
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -37,7 +28,7 @@ export function MarkLessonComplete({
       const response = await fetch("/api/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, lessonId }),
+        body: JSON.stringify({ lessonId }),
       });
 
       const data = (await response.json()) as {

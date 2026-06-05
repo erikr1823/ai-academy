@@ -252,3 +252,62 @@
 .backLink:hover span {
   color: #6ee7b7;
 }
+
+.clerkWrap {
+  margin-top: 2.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.clerkCard {
+  background-color: #09090b !important;
+  border: 1px solid #27272a !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35) !important;
+}
+
+.clerkHeaderTitle {
+  color: #fff !important;
+}
+
+.clerkHeaderSubtitle {
+  color: #a1a1aa !important;
+}
+
+.clerkSocialBtn {
+  border: 1px solid #3f3f46 !important;
+  background: #18181b !important;
+  color: #f4f4f5 !important;
+}
+
+.clerkPrimaryBtn {
+  background-color: #10b981 !important;
+  color: #000 !important;
+  font-weight: 600 !important;
+}
+
+.clerkPrimaryBtn:hover {
+  background-color: #34d399 !important;
+}
+
+.clerkInput {
+  border: 1px solid #3f3f46 !important;
+  background: #18181b !important;
+  color: #f4f4f5 !important;
+}
+
+.clerkFooterLink {
+  color: #34d399 !important;
+}
+
+.clerkLabel {
+  color: #d4d4d8 !important;
+}
+
+.clerkDivider {
+  background: #27272a !important;
+}
+
+.clerkDividerText {
+  color: #71717a !important;
+}

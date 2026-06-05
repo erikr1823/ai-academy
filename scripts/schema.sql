@@ -48,3 +48,35 @@ CREATE INDEX IF NOT EXISTS lessons_course_id_idx ON lessons (course_id);
 CREATE INDEX IF NOT EXISTS lessons_course_order_idx ON lessons (course_id, lesson_order);
 CREATE INDEX IF NOT EXISTS user_progress_user_id_idx ON user_progress (user_id);
 CREATE INDEX IF NOT EXISTS user_progress_lesson_id_idx ON user_progress (lesson_id);
+
+-- Clerk-authenticated students
+
+CREATE TABLE IF NOT EXISTS students (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clerk_id TEXT UNIQUE NOT NULL,
+  email TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS students_clerk_id_idx ON students (clerk_id);
+CREATE INDEX IF NOT EXISTS students_email_idx ON students (email);
+
+-- Admin portal
+
+CREATE TABLE IF NOT EXISTS admins (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clerk_id TEXT UNIQUE NOT NULL,
+  email TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS admins_clerk_id_idx ON admins (clerk_id);
+
+-- Course builder columns
+
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS slug TEXT;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS track TEXT;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS content JSONB DEFAULT '[]'::jsonb;
+CREATE UNIQUE INDEX IF NOT EXISTS courses_slug_unique_idx ON courses (slug) WHERE slug IS NOT NULL;

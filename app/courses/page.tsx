@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { PortalSignOut } from "@/components/portal-sign-out";
 import styles from "../courses.module.css";
 import {
   demoFlowSteps,
@@ -69,6 +70,7 @@ function PortalSidebar({ activeKey }: { activeKey: string }) {
           <Link href="/demo" className={styles.sidebarCardLink}>
             Tour the demo →
           </Link>
+          <PortalSignOut className={styles.signOutBtn} />
         </div>
       </div>
     </aside>
@@ -99,6 +101,7 @@ function MobileNav({ activeKey }: { activeKey: string }) {
                 {link.label}
               </Link>
             ))}
+            <PortalSignOut className={styles.signOutBtn} />
           </nav>
         </div>
       </div>

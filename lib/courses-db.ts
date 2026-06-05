@@ -1,4 +1,8 @@
 import { query } from "@/lib/db";
+import { runWithSchemaLock } from "@/lib/schema-lock";
+import { getAuthenticatedStudentId } from "@/lib/student-auth";
+import { parseLessonContent } from "@/lib/types/lesson-content";
+import type { LessonContentBlock } from "@/lib/types/lesson-content";
 import { COURSE_IDS, LESSON_IDS } from "@/lib/course-seed-ids";
 import type {
   CourseDetail,
@@ -14,8 +18,11 @@ export function isUuid(value: string): boolean {
   return UUID_RE.test(value);
 }
 
+let courseSchemaPromise: Promise<void> | null = null;
+
 export async function ensureCourseSchema(): Promise<void> {
-  await query(`
+  courseSchemaPromise ??= runWithSchemaLock(async () => {
+    await query(`
     CREATE TABLE IF NOT EXISTS courses (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       title TEXT NOT NULL,
@@ -49,7 +56,14 @@ export async function ensureCourseSchema(): Promise<void> {
     CREATE INDEX IF NOT EXISTS lessons_course_order_idx ON lessons (course_id, lesson_order);
     CREATE INDEX IF NOT EXISTS user_progress_user_id_idx ON user_progress (user_id);
     CREATE INDEX IF NOT EXISTS user_progress_lesson_id_idx ON user_progress (lesson_id);
+
+    ALTER TABLE courses ADD COLUMN IF NOT EXISTS slug TEXT;
+    ALTER TABLE courses ADD COLUMN IF NOT EXISTS track TEXT;
+    ALTER TABLE lessons ADD COLUMN IF NOT EXISTS content JSONB DEFAULT '[]'::jsonb;
+    CREATE UNIQUE INDEX IF NOT EXISTS courses_slug_unique_idx ON courses (slug) WHERE slug IS NOT NULL;
   `);
+  });
+  return courseSchemaPromise;
 }
 
 const SEED_COURSES = [
@@ -181,19 +195,24 @@ export async function seedCoursesIfEmpty(): Promise<{ seeded: boolean }> {
 export async function getActiveUserId(
   userId?: string | null,
 ): Promise<string | null> {
+  const authenticatedStudentId = await getAuthenticatedStudentId();
+  if (authenticatedStudentId) return authenticatedStudentId;
+
   if (userId) {
-    const found = await query<{ id: string }>(
+    const student = await query<{ id: string }>(
+      "SELECT id::text AS id FROM students WHERE id::text = $1 LIMIT 1",
+      [userId],
+    );
+    if (student.rows[0]) return student.rows[0].id;
+
+    const legacyUser = await query<{ id: string }>(
       "SELECT id::text AS id FROM users WHERE id::text = $1 LIMIT 1",
       [userId],
     );
-    if (found.rows[0]) return found.rows[0].id;
+    if (legacyUser.rows[0]) return legacyUser.rows[0].id;
   }
 
-  const fallback = await query<{ id: string }>(
-    `SELECT id::text AS id FROM users WHERE role = 'student' ORDER BY created_at DESC LIMIT 1`,
-  );
-
-  return fallback.rows[0]?.id ?? null;
+  return null;
 }
 
 function calcProgress(completed: number, total: number): number {
@@ -307,7 +326,10 @@ export async function getLessonById(
   const activeUserId = await getActiveUserId(userId);
 
   const result = await query<
-    LessonWithProgress & { course_title: string }
+    LessonWithProgress & {
+      course_title: string;
+      content: LessonContentBlock[] | null;
+    }
   >(
     `
     SELECT
@@ -318,6 +340,7 @@ export async function getLessonById(
       l.video_url,
       l.lesson_order,
       l.created_at,
+      l.content,
       COALESCE(up.completed, false) AS completed,
       up.completed_at,
       c.title AS course_title
@@ -330,7 +353,13 @@ export async function getLessonById(
     [courseId, lessonId, activeUserId],
   );
 
-  return result.rows[0] ?? null;
+  const row = result.rows[0];
+  if (!row) return null;
+
+  return {
+    ...row,
+    content: parseLessonContent(row.content),
+  };
 }
 
 export async function markLessonComplete(
@@ -344,11 +373,14 @@ export async function markLessonComplete(
   }
 
   const userCheck = await query<{ id: string }>(
-    "SELECT id::text AS id FROM users WHERE id::text = $1",
+    `SELECT id::text AS id FROM students WHERE id::text = $1
+     UNION ALL
+     SELECT id::text AS id FROM users WHERE id::text = $1
+     LIMIT 1`,
     [userId],
   );
   if (!userCheck.rows[0]) {
-    return { success: false, error: "User not found." };
+    return { success: false, error: "Student not found." };
   }
 
   const lessonCheck = await query<{ id: string }>(
@@ -388,14 +420,32 @@ export async function getDashboardStats(
       completion_percent: 0,
       current_track: null,
       user_name: null,
+      first_name: null,
+      last_name: null,
+      email: null,
+      created_at: null,
+      certificates_earned: 0,
     };
   }
 
-  const userResult = await query<{ name: string; track: string }>(
-    "SELECT name, track FROM users WHERE id::text = $1",
+  const studentResult = await query<{
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+    created_at: Date;
+  }>(
+    `SELECT first_name, last_name, email, created_at
+     FROM students WHERE id::text = $1`,
     [activeUserId],
   );
-  const user = userResult.rows[0];
+  const student = studentResult.rows[0];
+
+  const legacyUserResult = student
+    ? await query<{ track: string }>(
+        "SELECT track FROM users WHERE email = $1 LIMIT 1",
+        [student.email],
+      )
+    : { rows: [] as { track: string }[] };
 
   const progressResult = await query<{
     lessons_completed: string;
@@ -420,19 +470,34 @@ export async function getDashboardStats(
   );
   const total_lessons = Number(progressResult.rows[0]?.total_lessons ?? 0);
 
+  const track = legacyUserResult.rows[0]?.track;
   const trackLabel =
-    user?.track === "builder"
+    track === "builder"
       ? "AI Builder Academy"
-      : user?.track === "essentials"
+      : track === "essentials"
         ? "AI Essentials"
-        : user?.track ?? null;
+        : track ?? null;
+
+  const fullName = [student?.first_name, student?.last_name]
+    .filter(Boolean)
+    .join(" ");
+
+  const courses = await getCoursesWithProgress(activeUserId);
+  const certificates_earned = courses.filter(
+    (course) => course.progress_percent === 100,
+  ).length;
 
   return {
     courses_enrolled: Number(courseCountResult.rows[0]?.count ?? 0),
     lessons_completed,
     completion_percent: calcProgress(lessons_completed, total_lessons),
     current_track: trackLabel,
-    user_name: user?.name ?? null,
+    user_name: fullName || student?.email || null,
+    first_name: student?.first_name ?? null,
+    last_name: student?.last_name ?? null,
+    email: student?.email ?? null,
+    created_at: student?.created_at ?? null,
+    certificates_earned,
   };
 }
 
