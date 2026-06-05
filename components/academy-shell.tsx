@@ -1,6 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
+  AppSidebarDesktop,
+  AppSidebarMobileToggle,
+  type SidebarNavKey,
+} from "@/components/app-sidebar";
+import {
   demoFlowSteps,
   getNextDemoStep,
   getPrevDemoStep,
@@ -22,7 +27,8 @@ export type NavKey =
   | "certificates"
   | "roadmap"
   | "admin"
-  | "settings";
+  | "settings"
+  | "profile";
 
 export const academyNavLinks: {
   label: string;
@@ -170,19 +176,33 @@ function Sidebar({
   );
 }
 
+function studentNavKeyFromActiveKey(activeKey: NavKey): SidebarNavKey | undefined {
+  if (activeKey === "dashboard") return "dashboard";
+  if (activeKey === "courses") return "courses";
+  if (activeKey === "roadmap") return "roadmap";
+  if (activeKey === "certificates") return "certificates";
+  if (activeKey === "profile") return "profile";
+  return undefined;
+}
+
 export function AcademyShell({
   activeKey,
   pageLabel,
   children,
   fullWidth = false,
   demoStep,
+  sidebarVariant = "full",
 }: {
   activeKey: NavKey;
   pageLabel: string;
   children: ReactNode;
   fullWidth?: boolean;
   demoStep?: number;
+  sidebarVariant?: "full" | "student";
 }) {
+  const studentNavKey = studentNavKeyFromActiveKey(activeKey);
+  const useStudentSidebar = sidebarVariant === "student";
+
   return (
     <div className="relative min-h-screen bg-black">
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
@@ -191,12 +211,19 @@ export function AcademyShell({
       </div>
 
       <div className="relative flex min-h-screen">
-        <Sidebar activeKey={activeKey} className="hidden lg:flex" />
+        {useStudentSidebar ? (
+          <AppSidebarDesktop activeKey={studentNavKey} className="hidden lg:flex" />
+        ) : (
+          <Sidebar activeKey={activeKey} className="hidden lg:flex" />
+        )}
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-xl">
             <div className="flex items-center justify-between px-4 py-4 lg:px-8">
-              <div className="lg:hidden">
+              <div className="flex items-center gap-3 lg:hidden">
+                {useStudentSidebar && (
+                  <AppSidebarMobileToggle activeKey={studentNavKey} />
+                )}
                 <Link href="/" className="text-base font-semibold text-white">
                   AI <span className="text-emerald-400">Academy</span>
                 </Link>
@@ -220,21 +247,23 @@ export function AcademyShell({
               </div>
             </div>
 
-            <nav className="flex gap-2 overflow-x-auto border-t border-zinc-800/80 px-4 py-3 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {academyNavLinks.map((link) => (
-                <Link
-                  key={link.key}
-                  href={link.href}
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
-                    isNavActive(link.key, activeKey)
-                      ? "bg-emerald-500 text-black"
-                      : "border border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-emerald-500/30 hover:text-white"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
+            {!useStudentSidebar && (
+              <nav className="flex gap-2 overflow-x-auto border-t border-zinc-800/80 px-4 py-3 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {academyNavLinks.map((link) => (
+                  <Link
+                    key={link.key}
+                    href={link.href}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                      isNavActive(link.key, activeKey)
+                        ? "bg-emerald-500 text-black"
+                        : "border border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-emerald-500/30 hover:text-white"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+            )}
 
             {demoStep !== undefined && (
               <div className="border-t border-zinc-800/80 px-4 py-4 lg:px-8">

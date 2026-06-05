@@ -1,64 +1,77 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MarketingHeader } from "@/components/marketing-header";
+import styles from "../login.module.css";
 
 export const metadata: Metadata = {
   title: "Login — AI Academy",
   description: "Log in to your AI Academy account.",
 };
 
+const navLinks = [
+  { label: "Features", href: "/#features" },
+  { label: "Pricing", href: "/#pricing" },
+];
+
 export default function LoginPage() {
   return (
-    <div className="relative min-h-screen bg-black">
-      <div
-        className="pointer-events-none absolute inset-0 overflow-hidden"
-        aria-hidden
-      >
-        <div className="absolute -top-32 left-1/2 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[100px]" />
+    <div className={styles.page}>
+      <div className={styles.glow} aria-hidden>
+        <div className={styles.glowOrb} />
       </div>
 
-      <MarketingHeader />
+      <header className={styles.header}>
+        <nav className={styles.nav}>
+          <Link href="/" className={styles.logo}>
+            AI <span className={styles.logoAccent}>Academy</span>
+          </Link>
 
-      <main className="relative px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="mx-auto max-w-md">
-          <div className="text-center">
-            <p className="text-sm font-medium uppercase tracking-wider text-emerald-400">
+          <div className={styles.navCenter}>
+            {navLinks.map((link) => (
+              <Link key={link.href} href={link.href} className={styles.navLink}>
+                {link.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className={styles.navActions}>
+            <Link href="/login" className={styles.loginLink}>
               Login
-            </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
-              Welcome back
-            </h1>
-            <p className="mt-3 text-base text-zinc-400">
+            </Link>
+            <Link href="/signup" className={styles.btnPrimary}>
+              Get Started
+            </Link>
+          </div>
+        </nav>
+      </header>
+
+      <main className={styles.main}>
+        <div className={styles.wrap}>
+          <div className={styles.hero}>
+            <p className={styles.eyebrow}>Login</p>
+            <h1 className={styles.title}>Welcome back</h1>
+            <p className={styles.subtitle}>
               Authentication is coming in Phase 2. For now, explore the demo app
               or complete signup.
             </p>
           </div>
 
-          <div className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-950 p-6 sm:p-8">
-            <p className="text-center text-sm text-zinc-500">
+          <div className={styles.card}>
+            <p className={styles.cardNote}>
               Email magic links and Clerk auth are not connected yet.
             </p>
-            <div className="mt-6 flex flex-col gap-3">
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-black transition-colors hover:bg-emerald-400"
-              >
+            <div className={styles.btnStack}>
+              <Link href="/dashboard" className={styles.btnPrimaryLg}>
                 Enter Demo Dashboard
               </Link>
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center rounded-lg border border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-emerald-500/50 hover:text-emerald-400"
-              >
+              <Link href="/signup" className={styles.btnSecondary}>
                 Create an Account
               </Link>
             </div>
           </div>
 
-          <p className="mt-6 text-center text-sm text-zinc-500">
-            <Link href="/" className="text-emerald-400 hover:text-emerald-300">
-              ← Back to home
-            </Link>
-          </p>
+          <Link href="/" className={styles.backLink}>
+            <span>← Back to home</span>
+          </Link>
         </div>
       </main>
     </div>

@@ -12,3 +12,39 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE INDEX IF NOT EXISTS users_email_idx ON users (email);
+
+-- Courses, lessons, and progress (Day 3)
+
+CREATE TABLE IF NOT EXISTS courses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  difficulty TEXT NOT NULL,
+  category TEXT NOT NULL,
+  image_url TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS lessons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  video_url TEXT,
+  lesson_order INTEGER NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS user_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+  completed BOOLEAN NOT NULL DEFAULT false,
+  completed_at TIMESTAMPTZ,
+  UNIQUE (user_id, lesson_id)
+);
+
+CREATE INDEX IF NOT EXISTS lessons_course_id_idx ON lessons (course_id);
+CREATE INDEX IF NOT EXISTS lessons_course_order_idx ON lessons (course_id, lesson_order);
+CREATE INDEX IF NOT EXISTS user_progress_user_id_idx ON user_progress (user_id);
+CREATE INDEX IF NOT EXISTS user_progress_lesson_id_idx ON user_progress (lesson_id);

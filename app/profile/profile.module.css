@@ -1,0 +1,65 @@
+.cardGrid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.infoCard {
+  border-radius: 1rem;
+  border: 1px solid #27272a;
+  background-color: #09090b;
+  padding: 1.5rem;
+}
+
+.cardLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #34d399;
+}
+
+.cardValue {
+  margin-top: 1rem;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.cardMeta {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #a1a1aa;
+}
+
+.emptyTrack {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #71717a;
+}
+
+.noteCard {
+  margin-top: 2rem;
+  border-radius: 1rem;
+  border: 1px solid #27272a;
+  background-color: #09090b;
+  padding: 1.5rem;
+}
+
+.noteText {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #a1a1aa;
+}
+
+.noteActions {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}

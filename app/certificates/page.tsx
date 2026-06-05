@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import {
-  AcademyShell,
-  cardInteractiveClass,
-  cardClass,
-  PageHeader,
-  PageMain,
-  ProgressBar,
-  SectionHeader,
-} from "@/components/academy-shell";
+  PortalProgressBar,
+  PortalShell,
+  portalStyles,
+} from "@/components/portal-shell";
 import {
   badges,
   certificates,
@@ -15,35 +11,29 @@ import {
   rankLadder,
   type CertificateStatus,
 } from "@/lib/certificates";
+import styles from "./certificates.module.css";
 
 export const metadata: Metadata = {
   title: "Certificates & Achievements — AI Academy",
   description: "Track your XP, badges, certificates, and rank.",
 };
 
-function CertificateStatusBadge({ status }: { status: CertificateStatus }) {
-  const styles: Record<CertificateStatus, string> = {
-    Earned: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-    "In Progress": "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-    Locked: "border-zinc-800 bg-zinc-950 text-zinc-600",
-  };
-
-  return (
-    <span
-      className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${styles[status]}`}
-    >
-      {status}
-    </span>
-  );
+function certBadgeClass(status: CertificateStatus) {
+  switch (status) {
+    case "Earned":
+      return portalStyles.badgeComplete;
+    case "In Progress":
+      return portalStyles.badgeInProgress;
+    default:
+      return portalStyles.badgeLocked;
+  }
 }
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className={`${cardInteractiveClass} p-5`}>
-      <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-bold text-white sm:text-3xl">{value}</p>
+    <div className={styles.statCard}>
+      <p className={styles.statLabel}>{label}</p>
+      <p className={styles.statValue}>{value}</p>
     </div>
   );
 }
@@ -61,34 +51,28 @@ function BadgeCard({
 }) {
   return (
     <article
-      className={`${cardInteractiveClass} p-5 ${earned ? "" : "opacity-60"}`}
+      className={`${styles.badgeCard} ${earned ? "" : styles.badgeCardLocked}`}
     >
-      <div className="flex items-start gap-4">
+      <div className={styles.badgeRow}>
         <div
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
-            earned
-              ? "bg-emerald-500 text-black"
-              : "border border-zinc-800 bg-zinc-900 text-zinc-600"
+          className={`${styles.badgeIcon} ${
+            earned ? styles.badgeIconEarned : styles.badgeIconLocked
           }`}
         >
           {earned ? icon : "?"}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-semibold text-white">{name}</h3>
+        <div className={styles.badgeInfo}>
+          <div className={styles.badgeTop}>
+            <h3 className={styles.badgeName}>{name}</h3>
             <span
-              className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
-                earned
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                  : "border-zinc-800 text-zinc-600"
+              className={`${styles.badgeStatus} ${
+                earned ? styles.badgeStatusEarned : ""
               }`}
             >
               {earned ? "Earned" : "Locked"}
             </span>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-            {description}
-          </p>
+          <p className={styles.badgeDesc}>{description}</p>
         </div>
       </div>
     </article>
@@ -97,107 +81,105 @@ function BadgeCard({
 
 export default function CertificatesPage() {
   return (
-    <AcademyShell activeKey="certificates" pageLabel="Certificates" demoStep={9}>
-      <PageMain>
-        <PageHeader
-          label="Achievements"
-          title="Certificates & Achievements"
-          description="Track your progress, badges, and completed programs."
+    <PortalShell activeKey="certificates" pageLabel="Certificates" demoStep={9}>
+      <header className={portalStyles.pageHeader}>
+        <p className={portalStyles.pageEyebrow}>Achievements</p>
+        <h1 className={portalStyles.pageTitle}>Certificates & Achievements</h1>
+        <p className={portalStyles.pageDesc}>
+          Track your progress, badges, and completed programs.
+        </p>
+      </header>
+
+      <section className={styles.statsGrid}>
+        <StatCard
+          label="Total XP"
+          value={profileStats.totalXp.toLocaleString()}
         />
+        <StatCard label="Badges Earned" value={profileStats.badgesEarned} />
+        <StatCard label="Certificates" value={profileStats.certificates} />
+        <StatCard label="Current Rank" value={profileStats.currentRank} />
+      </section>
 
-        <section className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard
-            label="Total XP"
-            value={profileStats.totalXp.toLocaleString()}
-          />
-          <StatCard label="Badges Earned" value={profileStats.badgesEarned} />
-          <StatCard label="Certificates" value={profileStats.certificates} />
-          <StatCard label="Current Rank" value={profileStats.currentRank} />
-        </section>
+      <section className={portalStyles.section}>
+        <div className={portalStyles.sectionHeader}>
+          <h2 className={portalStyles.sectionTitle}>Certificates</h2>
+        </div>
+        <div className={styles.certGrid}>
+          {certificates.map((cert) => (
+            <article key={cert.id} className={styles.certCard}>
+              <span
+                className={`${portalStyles.badge} ${certBadgeClass(cert.status)}`}
+              >
+                {cert.status}
+              </span>
+              <h3 className={styles.certName}>{cert.name}</h3>
+              <div className={portalStyles.progressMeta}>
+                <span className={portalStyles.progressLabel}>Progress</span>
+                <span className={portalStyles.progressValue}>
+                  {cert.progress}%
+                </span>
+              </div>
+              <PortalProgressBar value={cert.progress} />
+              {cert.date && (
+                <p className={styles.certMeta}>Earned: {cert.date}</p>
+              )}
+              {cert.expected && (
+                <p className={styles.certMeta}>Expected: {cert.expected}</p>
+              )}
+              {cert.status === "Locked" && (
+                <p className={styles.certLocked}>
+                  Complete prerequisite tracks to unlock.
+                </p>
+              )}
+            </article>
+          ))}
+        </div>
+      </section>
 
-        <section className="mt-10">
-          <SectionHeader title="Certificates" />
-          <div className="grid gap-4 lg:grid-cols-3">
-            {certificates.map((cert) => (
-              <article key={cert.id} className={`${cardInteractiveClass} flex flex-col p-6`}>
-                <CertificateStatusBadge status={cert.status} />
-                <h3 className="mt-4 text-lg font-semibold text-white">
-                  {cert.name}
-                </h3>
-
-                <div className="mt-5">
-                  <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="text-zinc-500">Progress</span>
-                    <span className="font-semibold text-emerald-400">
-                      {cert.progress}%
-                    </span>
-                  </div>
-                  <ProgressBar value={cert.progress} />
-                </div>
-
-                {cert.date && (
-                  <p className="mt-4 text-sm text-zinc-500">Earned: {cert.date}</p>
-                )}
-                {cert.expected && (
-                  <p className="mt-4 text-sm text-zinc-500">
-                    Expected: {cert.expected}
-                  </p>
-                )}
-                {cert.status === "Locked" && (
-                  <p className="mt-4 text-sm text-zinc-600">
-                    Complete prerequisite tracks to unlock.
-                  </p>
-                )}
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-10">
-          <SectionHeader title="Rank Ladder" />
-          <div className={`${cardClass} p-6`}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              {rankLadder.map((rank, index) => {
-                const isCurrent = rank === profileStats.currentRank;
-                return (
-                  <div key={rank} className="flex items-center gap-3">
-                    <span
-                      className={`rounded-full px-4 py-2 text-sm font-medium ${
-                        isCurrent
-                          ? "bg-emerald-500 text-black"
-                          : "border border-zinc-800 bg-zinc-900 text-zinc-400"
-                      }`}
-                    >
-                      {rank}
-                      {isCurrent && (
-                        <span className="ml-2 text-xs font-semibold opacity-80">
-                          You
-                        </span>
-                      )}
-                    </span>
-                    {index < rankLadder.length - 1 && (
-                      <span className="hidden text-zinc-700 sm:inline">→</span>
+      <section className={portalStyles.section}>
+        <div className={portalStyles.sectionHeader}>
+          <h2 className={portalStyles.sectionTitle}>Rank Ladder</h2>
+        </div>
+        <div className={styles.rankCard}>
+          <div className={styles.rankRow}>
+            {rankLadder.map((rank, index) => {
+              const isCurrent = rank === profileStats.currentRank;
+              return (
+                <div key={rank} className={styles.rankItem}>
+                  <span
+                    className={`${styles.rankPill} ${
+                      isCurrent ? styles.rankPillActive : ""
+                    }`}
+                  >
+                    {rank}
+                    {isCurrent && (
+                      <span className={styles.rankYou}>You</span>
                     )}
-                  </div>
-                );
-              })}
-            </div>
-            <p className="mt-4 text-sm text-zinc-500">
-              Earn XP, complete certificates, and finish projects to climb the
-              ladder.
-            </p>
+                  </span>
+                  {index < rankLadder.length - 1 && (
+                    <span className={styles.rankArrow}>→</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </section>
+          <p className={styles.rankNote}>
+            Earn XP, complete certificates, and finish projects to climb the
+            ladder.
+          </p>
+        </div>
+      </section>
 
-        <section className="mt-10">
-          <SectionHeader title="Badges" />
-          <div className="grid gap-4 sm:grid-cols-2">
-            {badges.map((badge) => (
-              <BadgeCard key={badge.id} {...badge} />
-            ))}
-          </div>
-        </section>
-      </PageMain>
-    </AcademyShell>
+      <section className={portalStyles.section}>
+        <div className={portalStyles.sectionHeader}>
+          <h2 className={portalStyles.sectionTitle}>Badges</h2>
+        </div>
+        <div className={styles.badgeGrid}>
+          {badges.map((badge) => (
+            <BadgeCard key={badge.id} {...badge} />
+          ))}
+        </div>
+      </section>
+    </PortalShell>
   );
 }

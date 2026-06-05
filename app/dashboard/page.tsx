@@ -1,259 +1,369 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import styles from "../dashboard.module.css";
 import {
-  AcademyShell,
-  btnPrimaryClass,
-  btnSecondaryClass,
-  cardInteractiveClass,
-  linkAccentClass,
-  PageHeader,
-  PageMain,
-  ProgressBar,
-  SectionHeader,
-  StatusBadge,
-  TrackBadge,
-} from "@/components/academy-shell";
+  demoFlowSteps,
+  getNextDemoStep,
+  getPrevDemoStep,
+} from "@/lib/demo-flow";
+import {
+  getActiveUserId,
+  getDashboardStats,
+  getRecentCourses,
+} from "@/lib/courses-db";
+import type { CourseWithProgress } from "@/lib/types/courses";
 
 export const metadata: Metadata = {
   title: "Dashboard — AI Academy",
   description: "Your AI Academy learning dashboard.",
 };
 
-const trackProgress = [
-  {
-    name: "AI Essentials",
-    progress: 45,
-    label: "9 of 20 lessons complete",
-    accent: "from-emerald-500/20 to-transparent",
-    href: "/courses",
-  },
-  {
-    name: "AI Builder Academy",
-    progress: 62,
-    label: "12 of 19 modules complete",
-    accent: "from-green-400/20 to-transparent",
-    href: "/courses",
-  },
+const navLinks = [
+  { label: "Dashboard", href: "/dashboard", key: "dashboard" },
+  { label: "Courses", href: "/courses", key: "courses" },
+  { label: "Roadmap", href: "/roadmap", key: "roadmap" },
+  { label: "Certificates", href: "/certificates", key: "certificates" },
+  { label: "Profile", href: "/profile", key: "profile" },
 ];
 
-const continueLearning = [
-  {
-    track: "Essentials",
-    title: "ChatGPT Basics",
-    duration: "15 min",
-    module: "Module 1 · Lesson 1",
-    href: "/courses/chatgpt-basics",
-  },
-  {
-    track: "Builder",
-    title: "Deploying Your First AI Agent",
-    duration: "32 min",
-    module: "Module 6 · Lesson 1",
-    href: "/courses/ai-workflows",
-  },
-  {
-    track: "Essentials",
-    title: "Prompt Engineering Fundamentals",
-    duration: "22 min",
-    module: "Module 2 · Lesson 1",
-    href: "/courses/prompt-engineering",
-  },
-];
+const DEMO_STEP = 4;
 
-const projects = [
-  {
-    name: "SiteScope Project",
-    track: "Builder",
-    status: "In Progress",
-    updated: "Updated 2 days ago",
-    id: "sitescope",
-  },
-  {
-    name: "HelpDesk AI",
-    track: "Builder",
-    status: "In Review",
-    updated: "Updated yesterday",
-    id: "helpdesk-ai",
-  },
-  {
-    name: "AI Email Assistant",
-    track: "Essentials",
-    status: "In Progress",
-    updated: "Updated 4 days ago",
-    id: "email-assistant",
-  },
-];
+function ProgressBar({ value }: { value: number }) {
+  return (
+    <div
+      className={styles.progressTrack}
+      role="progressbar"
+      aria-valuenow={value}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div className={styles.progressFill} style={{ width: `${value}%` }} />
+    </div>
+  );
+}
 
-const achievements = [
-  { label: "First Lesson", detail: "Completed your first module" },
-  { label: "Prompt Pro", detail: "Finished 10 prompt exercises" },
-  { label: "Builder Badge", detail: "Shipped your first project" },
-  { label: "7-Day Streak", detail: "Learned 7 days in a row" },
-  { label: "Mentor Ready", detail: "Asked 5 mentor questions" },
-];
+function PortalSidebar({ activeKey }: { activeKey: string }) {
+  return (
+    <aside className={styles.sidebar}>
+      <div className={styles.sidebarBrand}>
+        <Link href="/" className={styles.sidebarLogo}>
+          AI <span className={styles.sidebarLogoAccent}>Academy</span>
+        </Link>
+      </div>
+      <nav className={styles.sidebarNav}>
+        {navLinks.map((link) => (
+          <Link
+            key={link.key}
+            href={link.href}
+            className={`${styles.sidebarLink} ${
+              link.key === activeKey ? styles.sidebarLinkActive : ""
+            }`}
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+      <div className={styles.sidebarFooter}>
+        <div className={styles.sidebarCard}>
+          <p className={styles.sidebarCardLabel}>Student Portal</p>
+          <p className={styles.sidebarCardText}>
+            Track courses, complete lessons, and earn certificates.
+          </p>
+          <Link href="/demo" className={styles.sidebarCardLink}>
+            Tour the demo →
+          </Link>
+        </div>
+      </div>
+    </aside>
+  );
+}
 
-function TrackProgressCard({
-  name,
-  progress,
+function MobileNav({ activeKey }: { activeKey: string }) {
+  return (
+    <details className={styles.mobileMenu}>
+      <summary className={styles.menuSummary}>Menu</summary>
+      <div className={styles.mobileDrawer}>
+        <div className={styles.mobileOverlay} />
+        <div className={styles.mobilePanel}>
+          <div className={styles.mobilePanelHeader}>
+            <Link href="/" className={styles.mobileTitle}>
+              AI <span className={styles.sidebarLogoAccent}>Academy</span>
+            </Link>
+          </div>
+          <nav className={styles.mobilePanelNav}>
+            {navLinks.map((link) => (
+              <Link
+                key={link.key}
+                href={link.href}
+                className={`${styles.sidebarLink} ${
+                  link.key === activeKey ? styles.sidebarLinkActive : ""
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function DemoFlowBar() {
+  const current = demoFlowSteps.find((item) => item.step === DEMO_STEP);
+  const prev = getPrevDemoStep(DEMO_STEP);
+  const next = getNextDemoStep(DEMO_STEP);
+
+  return (
+    <div className={styles.demoBar}>
+      <div className={styles.demoBarInner}>
+        <div>
+          <p className={styles.demoLabel}>
+            Demo Flow · Step {DEMO_STEP} of {demoFlowSteps.length}
+          </p>
+          <p className={styles.demoCurrent}>
+            Current: <strong>{current?.label}</strong>
+          </p>
+        </div>
+        <div className={styles.demoActions}>
+          {prev && (
+            <Link href={prev.href} className={styles.btnSecondary}>
+              ← {prev.label}
+            </Link>
+          )}
+          {next ? (
+            <Link href={next.href} className={styles.btnPrimary}>
+              Next: {next.label} →
+            </Link>
+          ) : (
+            <Link href="/" className={styles.btnPrimary}>
+              Demo Complete · Back to Landing
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({
   label,
+  value,
+  detail,
   accent,
-  href,
 }: {
-  name: string;
-  progress: number;
   label: string;
-  accent: string;
-  href: string;
+  value: string;
+  detail?: string;
+  accent?: "green" | "emerald";
 }) {
   return (
-    <article className={`${cardInteractiveClass} p-6`}>
+    <article className={styles.statCard}>
       <div
-        className={`mb-4 h-1 w-12 rounded-full bg-gradient-to-r ${accent}`}
+        className={`${styles.statAccent} ${
+          accent === "green"
+            ? styles.statAccentGreen
+            : accent === "emerald"
+              ? styles.statAccentEmerald
+              : ""
+        }`}
         aria-hidden
       />
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-semibold text-white">{name}</h3>
-          <p className="mt-1 text-sm text-zinc-400">{label}</p>
-        </div>
-        <span className="text-2xl font-bold text-emerald-400">{progress}%</span>
-      </div>
-      <div className="mt-5">
-        <ProgressBar value={progress} />
-      </div>
-      <Link href={href} className={`mt-5 ${btnPrimaryClass}`}>
-        Continue Track
-      </Link>
+      <p className={styles.statLabel}>{label}</p>
+      <p className={styles.statValue}>{value}</p>
+      {detail && <p className={styles.statDetail}>{detail}</p>}
     </article>
   );
 }
 
-export default function DashboardPage() {
+function CourseCard({ course }: { course: CourseWithProgress }) {
   return (
-    <AcademyShell activeKey="dashboard" pageLabel="Dashboard" demoStep={4}>
-      <PageMain>
-        <PageHeader
-          label="Dashboard"
-          title="Welcome back, Erik"
-          description="You're making great progress across both tracks. Pick up where you left off or ask your AI mentor for help."
-        />
-
-        <section className="mt-8 grid gap-6 lg:grid-cols-2">
-          {trackProgress.map((track) => (
-            <TrackProgressCard key={track.name} {...track} />
-          ))}
-        </section>
-
-        <div className="mt-8 grid gap-8 xl:grid-cols-3">
-          <section className="xl:col-span-2">
-            <SectionHeader
-              title="Continue Learning"
-              action={
-                <Link href="/courses" className={linkAccentClass}>
-                  View all lessons
-                </Link>
-              }
-            />
-            <div className="space-y-4">
-              {continueLearning.map((lesson) => (
-                <article
-                  key={lesson.title}
-                  className={`${cardInteractiveClass} p-5`}
-                >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <TrackBadge label={lesson.track} />
-                      <h3 className="mt-3 text-base font-semibold text-white sm:text-lg">
-                        {lesson.title}
-                      </h3>
-                      <p className="mt-1 text-sm text-zinc-500">
-                        {lesson.module} · {lesson.duration}
-                      </p>
-                    </div>
-                    <Link href={lesson.href} className={`shrink-0 ${btnPrimaryClass}`}>
-                      Resume
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <SectionHeader title="AI Mentor" />
-            <article className="rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 to-zinc-950 p-6">
-              <p className="text-xs font-medium uppercase tracking-wider text-emerald-400">
-                Available 24/7
-              </p>
-              <h3 className="mt-3 text-lg font-semibold text-white">
-                Get unstuck in minutes
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-                Ask about prompts, project architecture, deployment checklists,
-                or review your latest build before you ship.
-              </p>
-              <div className="mt-5 space-y-2">
-                <p className="text-xs text-zinc-500">Suggested prompts</p>
-                <p className="rounded-lg border border-zinc-800 bg-black/40 px-3 py-2 text-sm text-zinc-300">
-                  Review my agent workflow for production readiness.
-                </p>
-                <p className="rounded-lg border border-zinc-800 bg-black/40 px-3 py-2 text-sm text-zinc-300">
-                  Help me draft a client-facing AI use case.
-                </p>
-              </div>
-              <Link
-                href="/mentor"
-                className={`mt-5 w-full ${btnPrimaryClass} px-4 py-3`}
-              >
-                Open AI Mentor
-              </Link>
-            </article>
-          </section>
-        </div>
-
-        <section className="mt-8">
-          <SectionHeader
-            title="My Projects"
-            action={
-              <Link href="/projects" className={btnSecondaryClass}>
-                View Projects
-              </Link>
-            }
+    <article className={styles.courseCard}>
+      <div className={styles.courseImageWrap}>
+        {course.image_url ? (
+          <Image
+            src={course.image_url}
+            alt={course.title}
+            fill
+            className={styles.courseImage}
+            sizes="(max-width: 768px) 100vw, 50vw"
           />
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {projects.map((project) => (
-              <article key={project.name} className={`${cardInteractiveClass} p-5`}>
-                <div className="flex items-start justify-between gap-3">
-                  <TrackBadge label={project.track} />
-                  <StatusBadge status={project.status} />
-                </div>
-                <h3 className="mt-3 text-base font-semibold text-white">
-                  {project.name}
-                </h3>
-                <p className="mt-2 text-sm text-zinc-500">{project.updated}</p>
-                <Link href={`/projects/${project.id}`} className={`mt-4 inline-flex ${linkAccentClass}`}>
-                  Open project
-                </Link>
-              </article>
-            ))}
-          </div>
-        </section>
+        ) : (
+          <div className={styles.courseImageFallback}>AI</div>
+        )}
+        <div className={styles.courseImageOverlay} />
+        <div className={styles.courseBadges}>
+          <span className={styles.badge}>{course.category}</span>
+          <span className={`${styles.badge} ${styles.badgeMuted}`}>
+            {course.difficulty}
+          </span>
+        </div>
+      </div>
+      <div className={styles.courseBody}>
+        <h3 className={styles.courseTitle}>{course.title}</h3>
+        <p className={styles.courseDesc}>{course.description}</p>
+        <div className={styles.progressMeta}>
+          <span className={styles.progressLabel}>Progress</span>
+          <span className={styles.progressValue}>{course.progress_percent}%</span>
+        </div>
+        <ProgressBar value={course.progress_percent} />
+        <p className={styles.progressSub}>
+          {course.completed_count} of {course.lesson_count} lessons complete
+        </p>
+        <Link
+          href={`/courses/${course.id}`}
+          className={`${styles.btnPrimary} ${styles.courseCta}`}
+        >
+          {course.progress_percent > 0 ? "Continue" : "Start Course"}
+        </Link>
+      </div>
+    </article>
+  );
+}
 
-        <section className="mt-8">
-          <SectionHeader title="Recent Achievements" />
-          <div className="flex flex-wrap gap-3">
-            {achievements.map((badge) => (
-              <div
-                key={badge.label}
-                className={`${cardInteractiveClass} px-4 py-3 sm:min-w-[180px]`}
-              >
-                <p className="text-sm font-semibold text-white">{badge.label}</p>
-                <p className="mt-1 text-xs text-zinc-500">{badge.detail}</p>
+export default async function DashboardPage() {
+  const userId = await getActiveUserId();
+  const stats = await getDashboardStats(userId);
+  const recentCourses = await getRecentCourses(userId);
+  const welcomeName = stats.user_name?.split(" ")[0] ?? "Student";
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.glow} aria-hidden>
+        <div className={styles.glowOrb1} />
+        <div className={styles.glowOrb2} />
+      </div>
+
+      <div className={styles.layout}>
+        <PortalSidebar activeKey="dashboard" />
+
+        <div className={styles.mainCol}>
+          <header className={styles.topBar}>
+            <div className={styles.topBarInner}>
+              <div className={styles.topBarLeft}>
+                <MobileNav activeKey="dashboard" />
+                <Link href="/" className={styles.mobileTitle}>
+                  AI <span className={styles.sidebarLogoAccent}>Academy</span>
+                </Link>
               </div>
-            ))}
-          </div>
-        </section>
-      </PageMain>
-    </AcademyShell>
+              <div className={styles.topBarTitleWrap}>
+                <p className={styles.topBarEyebrow}>AI Academy</p>
+                <p className={styles.topBarTitle}>Dashboard</p>
+              </div>
+              <div className={styles.topBarLeft}>
+                <span className={styles.pageBadge}>Dashboard</span>
+                <Link href="/" className={styles.landingLink}>
+                  Landing
+                </Link>
+              </div>
+            </div>
+            <DemoFlowBar />
+          </header>
+
+          <main className={styles.main}>
+            <header className={styles.pageHeader}>
+              <p className={styles.pageEyebrow}>Dashboard</p>
+              <h1 className={styles.pageTitle}>Welcome back, {welcomeName}</h1>
+              <p className={styles.pageDesc}>
+                Track your enrolled courses, completed lessons, and current
+                learning path.
+              </p>
+            </header>
+
+            <section className={styles.statsGrid}>
+              <StatCard
+                label="Courses Enrolled"
+                value={String(stats.courses_enrolled)}
+                detail="Available learning paths"
+              />
+              <StatCard
+                label="Lessons Completed"
+                value={String(stats.lessons_completed)}
+                detail="Across all courses"
+                accent="green"
+              />
+              <StatCard
+                label="Completion Percentage"
+                value={`${stats.completion_percent}%`}
+                detail="Overall lesson progress"
+              />
+              <StatCard
+                label="Current Track"
+                value={stats.current_track ?? "—"}
+                detail={
+                  stats.current_track
+                    ? "Your enrolled learning path"
+                    : "Sign up to select a track"
+                }
+                accent="emerald"
+              />
+            </section>
+
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Recent Courses</h2>
+                <Link href="/courses" className={styles.linkAccent}>
+                  View all courses
+                </Link>
+              </div>
+              {recentCourses.length > 0 ? (
+                <div className={styles.coursesGrid}>
+                  {recentCourses.map((course) => (
+                    <CourseCard key={course.id} course={course} />
+                  ))}
+                </div>
+              ) : (
+                <article className={styles.emptyCard}>
+                  <p className={styles.emptyTitle}>No courses yet</p>
+                  <p className={styles.emptyDesc}>
+                    Courses are seeded automatically on first load.
+                  </p>
+                  <Link href="/courses" className={styles.btnPrimary}>
+                    Browse courses
+                  </Link>
+                </article>
+              )}
+            </section>
+
+            {recentCourses.length > 0 && (
+              <section className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>Quick Progress</h2>
+                </div>
+                <div className={styles.quickGrid}>
+                  {recentCourses.map((course) => (
+                    <article key={course.id} className={styles.quickCard}>
+                      <div className={styles.quickTop}>
+                        <div>
+                          <span className={styles.badge}>{course.category}</span>
+                          <h3 className={styles.quickTitle}>{course.title}</h3>
+                          <p className={styles.quickMeta}>
+                            {course.completed_count} of {course.lesson_count}{" "}
+                            lessons
+                          </p>
+                        </div>
+                        <span className={styles.quickPercent}>
+                          {course.progress_percent}%
+                        </span>
+                      </div>
+                      <div className={styles.quickProgress}>
+                        <ProgressBar value={course.progress_percent} />
+                      </div>
+                      <Link
+                        href={`/courses/${course.id}`}
+                        className={`${styles.linkAccent} ${styles.quickLink}`}
+                      >
+                        Open course →
+                      </Link>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+          </main>
+        </div>
+      </div>
+    </div>
   );
 }

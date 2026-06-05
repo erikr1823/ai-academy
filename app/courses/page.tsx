@@ -1,297 +1,247 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import styles from "../courses.module.css";
 import {
-  AcademyShell,
-  btnPrimaryClass,
-  cardClass,
-  linkAccentClass,
-  PageHeader,
-  PageMain,
-  ProgressBar,
-  TrackBadge,
-} from "@/components/academy-shell";
-import {
-  curriculumTracks,
-  formatMinutes,
-  getTrackStats,
-  type CurriculumModule,
-  type CurriculumTrack,
-  type ModuleStatus,
-} from "@/lib/curriculum";
-import {
-  featuredLessonIds,
-  getLessonById,
-  getLessonIdForModuleTitle,
-} from "@/lib/lessons";
+  demoFlowSteps,
+  getNextDemoStep,
+  getPrevDemoStep,
+} from "@/lib/demo-flow";
+import { getCoursesWithProgress } from "@/lib/courses-db";
+import type { CourseWithProgress } from "@/lib/types/courses";
 
 export const metadata: Metadata = {
   title: "Courses — AI Academy",
-  description: "AI Essentials and AI Builder Academy curricula.",
+  description: "Browse AI Essentials and AI Builder Academy courses.",
 };
 
-function StatusBadge({ status }: { status: ModuleStatus }) {
-  const config: Record<ModuleStatus, { label: string; className: string }> = {
-    completed: {
-      label: "Completed",
-      className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-    },
-    in_progress: {
-      label: "In Progress",
-      className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-    },
-    available: {
-      label: "Available",
-      className: "border-zinc-600 bg-zinc-900 text-zinc-300",
-    },
-    locked: {
-      label: "Locked",
-      className: "border-zinc-800 bg-zinc-950 text-zinc-600",
-    },
-  };
+const navLinks = [
+  { label: "Dashboard", href: "/dashboard", key: "dashboard" },
+  { label: "Courses", href: "/courses", key: "courses" },
+  { label: "Roadmap", href: "/roadmap", key: "roadmap" },
+  { label: "Certificates", href: "/certificates", key: "certificates" },
+  { label: "Profile", href: "/profile", key: "profile" },
+];
 
-  const { label, className } = config[status];
+const DEMO_STEP = 5;
 
+function ProgressBar({ value }: { value: number }) {
   return (
-    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${className}`}>
-      {label}
-    </span>
+    <div
+      className={styles.progressTrack}
+      role="progressbar"
+      aria-valuenow={value}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div className={styles.progressFill} style={{ width: `${value}%` }} />
+    </div>
   );
 }
 
-function ModuleCard({ module }: { module: CurriculumModule }) {
-  const isLocked = module.status === "locked";
-  const isCompleted = module.status === "completed";
-  const lessonId = getLessonIdForModuleTitle(module.title);
-  const lessonHref = lessonId ? `/courses/${lessonId}` : undefined;
-
-  const actionLabel =
-    module.status === "completed"
-      ? "Review"
-      : module.status === "in_progress"
-        ? "Continue"
-        : `Start Week ${module.week}`;
-
+function PortalSidebar({ activeKey }: { activeKey: string }) {
   return (
-    <article
-      className={`${cardClass} p-5 transition-colors ${
-        isLocked ? "opacity-60" : "hover:border-emerald-500/30"
-      }`}
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 flex-1 gap-4">
-          <div
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
-              isCompleted
-                ? "bg-emerald-500 text-black"
-                : isLocked
-                  ? "border border-zinc-800 bg-zinc-900 text-zinc-600"
-                  : "border border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+    <aside className={styles.sidebar}>
+      <div className={styles.sidebarBrand}>
+        <Link href="/" className={styles.sidebarLogo}>
+          AI <span className={styles.sidebarLogoAccent}>Academy</span>
+        </Link>
+      </div>
+      <nav className={styles.sidebarNav}>
+        {navLinks.map((link) => (
+          <Link
+            key={link.key}
+            href={link.href}
+            className={`${styles.sidebarLink} ${
+              link.key === activeKey ? styles.sidebarLinkActive : ""
             }`}
           >
-            {isCompleted ? "✓" : module.week}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-                Week {module.week}
-              </span>
-              <StatusBadge status={module.status} />
-            </div>
-            {lessonHref && !isLocked ? (
-              <Link
-                href={lessonHref}
-                className="mt-1 block text-base font-semibold text-white transition-colors hover:text-emerald-400 sm:text-lg"
-              >
-                {module.title}
-              </Link>
-            ) : (
-              <h3 className="mt-1 text-base font-semibold text-white sm:text-lg">
-                {module.title}
-              </h3>
-            )}
-            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
-              <span>{module.lessons} lessons</span>
-              <span>{formatMinutes(module.estimatedMinutes)}</span>
-              <span className="font-medium text-emerald-400/80">
-                +{module.xp} XP
-              </span>
-            </div>
-          </div>
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+      <div className={styles.sidebarFooter}>
+        <div className={styles.sidebarCard}>
+          <p className={styles.sidebarCardLabel}>Student Portal</p>
+          <p className={styles.sidebarCardText}>
+            Track courses, complete lessons, and earn certificates.
+          </p>
+          <Link href="/demo" className={styles.sidebarCardLink}>
+            Tour the demo →
+          </Link>
         </div>
       </div>
+    </aside>
+  );
+}
 
-      {module.status === "in_progress" && (
-        <div className="mt-4">
-          <div className="mb-2 flex items-center justify-between text-xs">
-            <span className="text-zinc-500">Lesson progress</span>
-            <span className="text-zinc-300">{module.progress}%</span>
-          </div>
-          <ProgressBar value={module.progress} />
-        </div>
-      )}
-
-      <div className="mt-4">
-        {module.status === "locked" ? (
-          <p className="text-sm text-zinc-600">
-            Complete the previous week to unlock this module.
-          </p>
-        ) : lessonHref ? (
-          <div className="flex flex-wrap items-center gap-3">
-            {module.status === "completed" && (
-              <span className="text-sm text-emerald-400">
-                +{module.xp} XP earned
-              </span>
-            )}
-            <Link href={lessonHref} className={btnPrimaryClass}>
-              {actionLabel}
+function MobileNav({ activeKey }: { activeKey: string }) {
+  return (
+    <details className={styles.mobileMenu}>
+      <summary className={styles.menuSummary}>Menu</summary>
+      <div className={styles.mobileDrawer}>
+        <div className={styles.mobileOverlay} />
+        <div className={styles.mobilePanel}>
+          <div className={styles.mobilePanelHeader}>
+            <Link href="/" className={styles.mobileTitle}>
+              AI <span className={styles.sidebarLogoAccent}>Academy</span>
             </Link>
           </div>
-        ) : module.status === "completed" ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-emerald-400">
-              +{module.xp} XP earned
-            </span>
-            <button type="button" className={btnPrimaryClass}>
-              Review
-            </button>
-          </div>
+          <nav className={styles.mobilePanelNav}>
+            {navLinks.map((link) => (
+              <Link
+                key={link.key}
+                href={link.href}
+                className={`${styles.sidebarLink} ${
+                  link.key === activeKey ? styles.sidebarLinkActive : ""
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function DemoFlowBar() {
+  const current = demoFlowSteps.find((item) => item.step === DEMO_STEP);
+  const prev = getPrevDemoStep(DEMO_STEP);
+  const next = getNextDemoStep(DEMO_STEP);
+
+  return (
+    <div className={styles.demoBar}>
+      <div className={styles.demoBarInner}>
+        <div>
+          <p className={styles.demoLabel}>
+            Demo Flow · Step {DEMO_STEP} of {demoFlowSteps.length}
+          </p>
+          <p className={styles.demoCurrent}>
+            Current: <strong>{current?.label}</strong>
+          </p>
+        </div>
+        <div className={styles.demoActions}>
+          {prev && (
+            <Link href={prev.href} className={styles.btnSecondary}>
+              ← {prev.label}
+            </Link>
+          )}
+          {next ? (
+            <Link href={next.href} className={styles.btnPrimary}>
+              Next: {next.label} →
+            </Link>
+          ) : (
+            <Link href="/" className={styles.btnPrimary}>
+              Demo Complete · Back to Landing
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CourseCard({ course }: { course: CourseWithProgress }) {
+  return (
+    <article className={styles.courseCard}>
+      <div className={styles.courseImageWrap}>
+        {course.image_url ? (
+          <Image
+            src={course.image_url}
+            alt={course.title}
+            fill
+            className={styles.courseImage}
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
         ) : (
-          <button type="button" className={btnPrimaryClass}>
-            {actionLabel}
-          </button>
+          <div className={styles.courseImageFallback}>AI</div>
         )}
+        <div className={styles.courseImageOverlay} />
+        <div className={styles.courseBadges}>
+          <span className={styles.badge}>{course.category}</span>
+          <span className={`${styles.badge} ${styles.badgeMuted}`}>
+            {course.difficulty}
+          </span>
+        </div>
+      </div>
+      <div className={styles.courseBody}>
+        <h3 className={styles.courseTitle}>{course.title}</h3>
+        <p className={styles.courseDesc}>{course.description}</p>
+        <div className={styles.progressMeta}>
+          <span className={styles.progressLabel}>Progress</span>
+          <span className={styles.progressValue}>{course.progress_percent}%</span>
+        </div>
+        <ProgressBar value={course.progress_percent} />
+        <p className={styles.progressSub}>
+          {course.completed_count} of {course.lesson_count} lessons complete
+        </p>
+        <Link
+          href={`/courses/${course.id}`}
+          className={`${styles.btnPrimary} ${styles.courseCta}`}
+        >
+          {course.progress_percent > 0 ? "Continue" : "Start Course"}
+        </Link>
       </div>
     </article>
   );
 }
 
-function FeaturedLessons() {
-  return (
-    <section className={`${cardClass} p-6`}>
-      <h2 className="text-xl font-semibold text-white">Featured Lessons</h2>
-      <p className="mt-2 text-sm text-zinc-400">
-        Jump into example lessons with full step-by-step guidance and practice
-        tasks.
-      </p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {featuredLessonIds.map((id) => {
-          const lesson = getLessonById(id);
-          if (!lesson) return null;
-
-          return (
-            <Link
-              key={id}
-              href={`/courses/${id}`}
-              className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 transition-colors hover:border-emerald-500/40"
-            >
-              <TrackBadge label={lesson.track} />
-              <h3 className="mt-3 text-base font-semibold text-white">
-                {lesson.title}
-              </h3>
-              <p className="mt-2 line-clamp-2 text-sm text-zinc-500">
-                {lesson.overview}
-              </p>
-              <p className={`mt-3 ${linkAccentClass}`}>Open lesson →</p>
-            </Link>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function TrackSection({ track }: { track: CurriculumTrack }) {
-  const stats = getTrackStats(track);
+export default async function CoursesPage() {
+  const courses = await getCoursesWithProgress();
 
   return (
-    <section id={track.id}>
-      <div className={`${cardClass} mb-6 p-6`}>
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-emerald-400">
-              {track.durationWeeks}-Week Track
-            </p>
-            <h2 className="mt-1 text-2xl font-bold text-white">{track.name}</h2>
-            <p className="mt-2 max-w-xl text-sm text-zinc-400">
-              {track.description}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:gap-6">
-            <div>
-              <p className="text-xs text-zinc-500">Progress</p>
-              <p className="mt-1 text-lg font-bold text-emerald-400">
-                {stats.progressPercent}%
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-zinc-500">Completed</p>
-              <p className="mt-1 text-lg font-bold text-white">
-                {stats.completed}/{stats.totalModules}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-zinc-500">XP Earned</p>
-              <p className="mt-1 text-lg font-bold text-white">
-                {stats.earnedXp.toLocaleString()}
-                <span className="text-sm font-normal text-zinc-500">
-                  {" "}
-                  / {stats.totalXp.toLocaleString()}
-                </span>
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-zinc-500">Time Left</p>
-              <p className="mt-1 text-lg font-bold text-white">
-                {stats.remainingTime}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="text-zinc-400">Overall track progress</span>
-            <span className="font-medium text-emerald-400">
-              {stats.completed} weeks complete · {stats.inProgress} in progress ·{" "}
-              {stats.locked} locked
-            </span>
-          </div>
-          <ProgressBar value={stats.progressPercent} />
-        </div>
-
-        <p className="mt-4 text-xs text-zinc-600">
-          Total curriculum time: {stats.totalTime} · Estimated completion based on
-          current pace
-        </p>
+    <div className={styles.page}>
+      <div className={styles.glow} aria-hidden>
+        <div className={styles.glowOrb1} />
+        <div className={styles.glowOrb2} />
       </div>
 
-      <div className="space-y-4">
-        {track.modules.map((module) => (
-          <ModuleCard key={module.week} module={module} />
-        ))}
-      </div>
-    </section>
-  );
-}
+      <div className={styles.layout}>
+        <PortalSidebar activeKey="courses" />
 
-export default function CoursesPage() {
-  return (
-    <AcademyShell activeKey="courses" pageLabel="Courses" demoStep={5}>
-      <PageMain>
-        <PageHeader
-          label="Courses"
-          title="Your curriculum"
-          description="Progress week by week through AI Essentials or AI Builder Academy. Earn XP, unlock modules, and build deploy-ready skills."
-        />
+        <div className={styles.mainCol}>
+          <header className={styles.topBar}>
+            <div className={styles.topBarInner}>
+              <div className={styles.topBarLeft}>
+                <MobileNav activeKey="courses" />
+                <Link href="/" className={styles.mobileTitle}>
+                  AI <span className={styles.sidebarLogoAccent}>Academy</span>
+                </Link>
+              </div>
+              <div className={styles.topBarTitleWrap}>
+                <p className={styles.topBarEyebrow}>AI Academy</p>
+                <p className={styles.topBarTitle}>Courses</p>
+              </div>
+              <div className={styles.topBarLeft}>
+                <span className={styles.pageBadge}>Courses</span>
+                <Link href="/" className={styles.landingLink}>
+                  Landing
+                </Link>
+              </div>
+            </div>
+            <DemoFlowBar />
+          </header>
 
-        <div className="mt-10 space-y-16">
-          <FeaturedLessons />
-          {curriculumTracks.map((track) => (
-            <TrackSection key={track.id} track={track} />
-          ))}
+          <main className={styles.main}>
+            <header className={styles.pageHeader}>
+              <p className={styles.pageEyebrow}>Courses</p>
+              <h1 className={styles.pageTitle}>Your courses</h1>
+              <p className={styles.pageDesc}>
+                Learn at your own pace. Track progress across AI Essentials and
+                AI Builder Academy.
+              </p>
+            </header>
+
+            <section className={styles.coursesGrid}>
+              {courses.map((course) => (
+                <CourseCard key={course.id} course={course} />
+              ))}
+            </section>
+          </main>
         </div>
-      </PageMain>
-    </AcademyShell>
+      </div>
+    </div>
   );
 }

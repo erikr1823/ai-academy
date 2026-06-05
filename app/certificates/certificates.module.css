@@ -1,0 +1,251 @@
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.statCard {
+  border-radius: 1rem;
+  border: 1px solid #27272a;
+  background-color: #09090b;
+  padding: 1.25rem;
+  transition: border-color 0.2s;
+}
+
+.statCard:hover {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.statValue {
+  margin-top: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+@media (min-width: 640px) {
+  .statValue {
+    font-size: 1.875rem;
+  }
+}
+
+.certGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .certGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.certCard {
+  display: flex;
+  flex-direction: column;
+  border-radius: 1rem;
+  border: 1px solid #27272a;
+  background-color: #09090b;
+  padding: 1.5rem;
+  transition: border-color 0.2s;
+}
+
+.certCard:hover {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.certName {
+  margin-top: 1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.certMeta {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #71717a;
+}
+
+.certLocked {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #52525b;
+}
+
+.rankCard {
+  border-radius: 1rem;
+  border: 1px solid #27272a;
+  background-color: #09090b;
+  padding: 1.5rem;
+}
+
+.rankRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .rankRow {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
+
+.rankItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rankPill {
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #27272a;
+  background: #18181b;
+  color: #a1a1aa;
+}
+
+.rankPillActive {
+  background-color: #10b981;
+  border-color: #10b981;
+  color: #000;
+}
+
+.rankYou {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.rankArrow {
+  display: none;
+  color: #3f3f46;
+}
+
+@media (min-width: 640px) {
+  .rankArrow {
+    display: inline;
+  }
+}
+
+.rankNote {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #71717a;
+}
+
+.badgeGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .badgeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.badgeCard {
+  border-radius: 1rem;
+  border: 1px solid #27272a;
+  background-color: #09090b;
+  padding: 1.25rem;
+  transition: border-color 0.2s;
+}
+
+.badgeCard:hover {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.badgeCardLocked {
+  opacity: 0.6;
+}
+
+.badgeRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.badgeIcon {
+  display: flex;
+  height: 3rem;
+  width: 3rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.badgeIconEarned {
+  background-color: #10b981;
+  color: #000;
+}
+
+.badgeIconLocked {
+  border: 1px solid #27272a;
+  background: #18181b;
+  color: #52525b;
+}
+
+.badgeInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.badgeTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badgeName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.badgeStatus {
+  border-radius: 9999px;
+  border: 1px solid #27272a;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #52525b;
+}
+
+.badgeStatusEarned {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+}
+
+.badgeDesc {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #a1a1aa;
+}
